@@ -19,15 +19,20 @@ export const serializePortalQuotation = (quotation: any) => {
         updatedAt: quotation.updatedAt,
 
         // Lines
-        lines: (quotation.lines || []).map((line: any) => ({
-            id: line._id?.toString() || line.id,
-            productId: line.productId,
-            productName: line.productName,
-            quantity: line.quantity,
-            unitPrice: line.unitPrice,
-            discountPercent: line.discountPercent,
-            lineTotal: line.lineTotal
-        }))
+        lines: (quotation.lines || []).map((line: any) => {
+            const gross = line.unitPrice * line.quantity;
+            const discount = Math.round((gross * line.discountPercent) / 100);
+            const lineTotal = gross - discount;
+            return {
+                id: line._id?.toString() || line.id,
+                productId: line.productId,
+                productName: line.productName,
+                quantity: line.quantity,
+                unitPrice: line.unitPrice,
+                discountPercent: line.discountPercent,
+                lineTotal: lineTotal
+            };
+        })
     };
 
     return safeQuote;

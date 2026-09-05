@@ -9,6 +9,7 @@ export default function Layout() {
         { label: 'Approvals', path: '/workspace/approvals' },
         { label: 'Fulfillment', path: '/workspace/fulfillment' },
         { label: 'Subscriptions', path: '/workspace/subscriptions' },
+        { label: 'Billing', path: '/workspace/billing' },
         { label: 'Invoices', path: '/workspace/invoices' },
         { label: 'Deal Health', path: '/workspace/health' },
         { label: 'Reports', path: '/workspace/reports' },

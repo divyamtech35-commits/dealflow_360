@@ -37,9 +37,9 @@ export default function Login() {
 
             // Role-aware landing navigation:
             if (res.data.user.role === 'CUSTOMER') {
-                navigate('/internal/quotations');
+                navigate('/portal/dashboard', { replace: true });
             } else {
-                navigate('/internal/dashboard');
+                navigate('/internal/dashboard', { replace: true });
             }
         } catch (err: any) {
             setErrorMsg(err.response?.data?.message || 'Invalid email or password. Please try again.');

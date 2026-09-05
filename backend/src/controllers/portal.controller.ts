@@ -5,12 +5,48 @@ import { serializePortalQuotation } from '../views/serializers/portalQuotationSe
 import { recalculateQuotation } from '../services/quotationCalc';
 import { logAudit } from '../services/auditService';
 import { createOrderFromQuotation } from './order.controller';
-import { Order } from '../models/Order'; // Used for bypassing express req/res
+import { Order } from '../models/Order';
 import mongoose from 'mongoose';
+import { Quotation } from '../models/Quotation';
+import { ApiError } from '../utils/ApiError';
+
+const getCustomerQuote = async (req: Request) => {
+    const quote = await Quotation.findOne({
+        _id: req.params.id,
+        customerId: (req as any).user._id
+    });
+    if (!quote) throw new ApiError(404, 'Quotation not found');
+    return quote;
+};
+
+export const getPortalDashboard = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const customerId = (req as any).user._id;
+        console.log('Customer Portal Dashboard requested for:', customerId);
+        
+        const quotations = await Quotation.find({
+            customerId,
+            status: { $in: ['APPROVED', 'UNDER_NEGOTIATION', 'CONFIRMED'] }
+        }).sort({ createdAt: -1 });
+        console.log('Found quotations:', quotations.length);
+
+        const allUserQuotations = await Quotation.find({ customerId });
+        console.log('Total quotes for this customer (ignoring status):', allUserQuotations.length);
+
+        const orders = await Order.find({ customerId }).sort({ createdAt: -1 });
+
+        res.json({
+            quotations: quotations.map(q => serializePortalQuotation(q.toObject())),
+            orders
+        });
+    } catch (e) {
+        next(e);
+    }
+};
 
 export const getPortalQuotation = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const quote = (req as any).portalQuotation;
+        const quote = await getCustomerQuote(req);
         const lines = await QuotationLine.find({ quotationId: quote._id });
         const populatedQuote = { ...quote.toObject(), lines: lines.map(l => l.toObject()) };
 
@@ -28,7 +64,7 @@ export const getPortalQuotation = async (req: Request, res: Response, next: Next
 
 export const postComment = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const quote = (req as any).portalQuotation;
+        const quote = await getCustomerQuote(req);
         const { lineId, message } = req.body;
 
         const neg = await Negotiation.create({
@@ -55,7 +91,7 @@ export const postComment = async (req: Request, res: Response, next: NextFunctio
 
 export const postCounter = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const quote = (req as any).portalQuotation;
+        const quote = await getCustomerQuote(req);
         const { lineId, requestedDiscountPercent, message } = req.body;
 
         const neg = await Negotiation.create({
@@ -88,7 +124,7 @@ export const postCounter = async (req: Request, res: Response, next: NextFunctio
 
 export const confirmQuotation = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const quote = (req as any).portalQuotation;
+        const quote = await getCustomerQuote(req);
 
         // Verify there are no OPEN customer counters (we shouldn't confirm if a rep hasn't replied to a counter)
         const openCounters = await Negotiation.countDocuments({ quotationId: quote._id, status: 'OPEN', actorType: 'CUSTOMER' });
@@ -139,15 +175,17 @@ export const confirmQuotation = async (req: Request, res: Response, next: NextFu
 
         if (!existingOrder) {
             await Order.create({
+                orderNumber: `SO-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
                 quotationId: updatedQuote._id,
                 customerId: updatedQuote.customerId,
                 salesRepId: updatedQuote.salesRepId,
                 status: 'PENDING_FULFILLMENT',
-                lines: lines.map(l => ({
-                    productId: l.productId,
-                    quantity: l.quantity,
-                    unitPrice: l.unitPrice
-                }))
+                fulfillmentPlan: [],
+                splitMode: 'AUTO',
+                hasBackorder: false,
+                shipmentCount: 0,
+                totalShippingCost: 0,
+                grandTotal: updatedQuote.totalAmount
             });
         }
 

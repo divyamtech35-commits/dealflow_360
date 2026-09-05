@@ -9,7 +9,7 @@ export interface INegotiation extends Document {
     message: string;
     requestedDiscountPercent?: number;
     requestedQuantity?: number;
-    status: 'OPEN' | 'ACCEPTED' | 'REJECTED' | 'COUNTERED';
+    status: 'OPEN' | 'ACCEPTED' | 'REJECTED' | 'COUNTERED' | 'RESOLVED';
     resolvedAt?: Date;
     createdAt: Date;
 }
@@ -23,7 +23,7 @@ const NegotiationSchema = new Schema({
     message: { type: String, required: true },
     requestedDiscountPercent: { type: Number },
     requestedQuantity: { type: Number },
-    status: { type: String, enum: ['OPEN', 'ACCEPTED', 'REJECTED', 'COUNTERED'], required: true, default: 'OPEN' },
+    status: { type: String, enum: ['OPEN', 'ACCEPTED', 'REJECTED', 'COUNTERED', 'RESOLVED'], required: true, default: 'OPEN' },
     resolvedAt: { type: Date }
 }, { timestamps: true });
 

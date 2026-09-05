@@ -4,6 +4,7 @@ import { QuotationLine } from '../models/QuotationLine';
 import { Product } from '../models/Product';
 import { User } from '../models/User';
 import { DiscountRule } from '../models/DiscountRule';
+import { Negotiation } from '../models/Negotiation';
 import { recalculateQuotation } from '../services/quotationCalc';
 import { serializeQuotation } from '../views/serializers/quotationSerializer';
 import { resolveUnitPrice } from '../services/pricingEngine';
@@ -33,7 +34,8 @@ export const getQuotation = async (req: Request, res: Response, next: NextFuncti
         if (!quote) return res.status(404).json({ error: 'Not found' });
 
         const lines = await QuotationLine.find({ quotationId: quote._id });
-        res.json(serializeQuotation(quote, lines));
+        const negotiations = await Negotiation.find({ quotationId: quote._id }).sort({ createdAt: 1 });
+        res.json({ ...serializeQuotation(quote, lines), negotiations });
     } catch (e) { next(e); }
 };
 
@@ -73,7 +75,8 @@ export const updateQuotation = async (req: Request, res: Response, next: NextFun
         await Quotation.findByIdAndUpdate(req.params.id, updateData);
         const finalQ = await recalculateQuotation(req.params.id);
         const lines = await QuotationLine.find({ quotationId: finalQ._id });
-        res.json(serializeQuotation(finalQ, lines));
+        const negotiations = await Negotiation.find({ quotationId: finalQ._id }).sort({ createdAt: 1 });
+        res.json({ ...serializeQuotation(finalQ, lines), negotiations });
     } catch (e) { next(e); }
 };
 
@@ -137,5 +140,30 @@ export const getSuggestions = async (req: Request, res: Response, next: NextFunc
 
         const suggestions = rankSuggestions(lines, rules, products, quote.orderDiscountPercent || 0);
         res.json(suggestions);
+    } catch (e) { next(e); }
+};
+
+export const replyToNegotiation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { message } = req.body;
+        const neg = await Negotiation.create({
+            quotationId: req.params.id,
+            type: 'COMMENT',
+            actorType: 'REP',
+            message,
+            status: 'RESOLVED'
+        });
+        
+        // Mark customer OPEN counters as RESOLVED since rep has replied
+        await Negotiation.updateMany(
+            { quotationId: req.params.id, status: 'OPEN', actorType: 'CUSTOMER' },
+            { status: 'RESOLVED' }
+        );
+
+        const quote = await Quotation.findById(req.params.id);
+        const negotiations = await Negotiation.find({ quotationId: quote?._id }).sort({ createdAt: 1 });
+        const lines = await QuotationLine.find({ quotationId: quote?._id });
+        
+        res.status(201).json({ ...serializeQuotation(quote, lines), negotiations });
     } catch (e) { next(e); }
 };

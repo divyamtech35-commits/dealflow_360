@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import {
     listQuotations, getQuotation, createQuotation,
-    updateQuotation, addLine, updateLine, removeLine, getSuggestions
+    updateQuotation, addLine, updateLine, removeLine, getSuggestions, replyToNegotiation
 } from '../controllers/quotation.controller';
 
 import {
@@ -22,6 +22,8 @@ router.get('/:id/suggestions', getSuggestions);
 router.post('/:id/lines', addLine);
 router.patch('/:id/lines/:lineId', updateLine);
 router.delete('/:id/lines/:lineId', removeLine);
+
+router.post('/:id/reply', replyToNegotiation);
 
 // Phase 3D Approval Routing
 router.post('/:id/submit', submitQuotation);

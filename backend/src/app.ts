@@ -9,6 +9,8 @@ import quotationRoutes from './routes/quotation.routes';
 import approvalRoutes from './routes/approval.routes';
 import orderRoutes from './routes/order.routes';
 import billingRoutes from './routes/billing.routes';
+import portalRoutes from './routes/portal.routes';
+import shipmentRoutes from './routes/shipment.routes';
 
 dotenv.config();
 connectDB();
@@ -24,6 +26,8 @@ app.use('/api/quotations', quotationRoutes);
 app.use('/api/approvals', approvalRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/billing', billingRoutes);
+app.use('/api/portal', portalRoutes);
+app.use('/api/shipments', shipmentRoutes);
 
 import { errorHandler } from './middleware/errorHandler';
 app.use(errorHandler);

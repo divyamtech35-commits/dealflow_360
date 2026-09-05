@@ -31,3 +31,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         next(new ApiError(401, 'Unauthorized'));
     }
 };
+
+export const authorizeRoles = (...roles: string[]) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        if (!req.user || !roles.map(r => r.toUpperCase()).includes(req.user.role?.toUpperCase())) {
+            return next(new ApiError(403, 'Forbidden'));
+        }
+        next();
+    };
+};

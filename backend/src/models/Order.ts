@@ -1,5 +1,16 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export interface IOrderLine {
+    productId: mongoose.Types.ObjectId;
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+    discountAmount: number;
+    taxAmount: number;
+    lineTotal: number;
+    isSubscription: boolean;
+}
+
 export interface IFulfillmentLine {
     productId: mongoose.Types.ObjectId;
     productName: string;
@@ -23,6 +34,7 @@ export interface IOrder extends Document {
     customerId: mongoose.Types.ObjectId;
     salesRepId: mongoose.Types.ObjectId;
     status: 'PENDING_FULFILLMENT' | 'PARTIALLY_FULFILLED' | 'FULFILLED' | 'CANCELLED';
+    orderLines: IOrderLine[];
     fulfillmentPlan: IFulfillmentPlan[];
     splitMode: 'AUTO' | 'MANUAL';
     hasBackorder: boolean;
@@ -42,6 +54,17 @@ const FulfillmentLineSchema = new Schema({
     quantity: { type: Number, required: true }
 });
 
+const OrderLineSchema = new Schema({
+    productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    productName: { type: String, required: true },
+    quantity: { type: Number, required: true },
+    unitPrice: { type: Number, required: true },
+    discountAmount: { type: Number, default: 0 },
+    taxAmount: { type: Number, default: 0 },
+    lineTotal: { type: Number, required: true },
+    isSubscription: { type: Boolean, default: false }
+});
+
 const FulfillmentPlanSchema = new Schema({
     warehouseId: { type: Schema.Types.ObjectId, ref: 'Warehouse', default: null },
     warehouseName: { type: String },
@@ -59,6 +82,7 @@ const OrderSchema = new Schema({
     customerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     salesRepId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     status: { type: String, enum: ['PENDING_FULFILLMENT', 'PARTIALLY_FULFILLED', 'FULFILLED', 'CANCELLED'], required: true, default: 'PENDING_FULFILLMENT' },
+    orderLines: [OrderLineSchema],
     fulfillmentPlan: [FulfillmentPlanSchema],
     splitMode: { type: String, enum: ['AUTO', 'MANUAL'], required: true, default: 'AUTO' },
     hasBackorder: { type: Boolean, required: true, default: false, index: true },

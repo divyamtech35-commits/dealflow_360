@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../store/AuthContext';
 
 export default function Login() {
-    const [email, setEmail] = useState('bob@dealflow.com');
+    const [email, setEmail] = useState('customer1@dealflow360.com');
     const [password, setPassword] = useState('password123');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -17,9 +19,13 @@ export default function Login() {
             });
             if (res.ok) {
                 const data = await res.json();
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                navigate('/workspace');
+                login(data.token, data.user);
+                
+                if (data.user.role === 'CUSTOMER') {
+                    navigate('/portal/dashboard', { replace: true });
+                } else {
+                    navigate('/internal/dashboard', { replace: true });
+                }
             } else {
                 setError('Invalid credentials');
             }

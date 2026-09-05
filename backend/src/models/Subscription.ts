@@ -6,9 +6,12 @@ export interface ISubscription extends Document {
     productId: mongoose.Types.ObjectId;
     productName: string;
     billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
-    status: 'ACTIVE' | 'PAST_DUE' | 'CANCELLED';
+    status: 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'PAUSED' | 'EXPIRED';
     startDate: Date;
     nextBillingDate: Date;
+    endDate?: Date;
+    cancellationDate?: Date;
+    cancellationReason?: string;
     unitPrice: number;
     quantity: number;
     totalRecurringAmount: number;
@@ -22,9 +25,12 @@ const SubscriptionSchema = new Schema({
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
     productName: { type: String, required: true },
     billingCycle: { type: String, enum: ['MONTHLY', 'QUARTERLY', 'YEARLY'], required: true },
-    status: { type: String, enum: ['ACTIVE', 'PAST_DUE', 'CANCELLED'], required: true, default: 'ACTIVE' },
+    status: { type: String, enum: ['ACTIVE', 'PAST_DUE', 'CANCELLED', 'PAUSED', 'EXPIRED'], required: true, default: 'ACTIVE' },
     startDate: { type: Date, required: true, default: Date.now },
     nextBillingDate: { type: Date, required: true },
+    endDate: { type: Date },
+    cancellationDate: { type: Date },
+    cancellationReason: { type: String },
     unitPrice: { type: Number, required: true },
     quantity: { type: Number, required: true },
     totalRecurringAmount: { type: Number, required: true }

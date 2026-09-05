@@ -16,12 +16,17 @@ export interface IInvoice extends Document {
     invoiceNumber: string;
     orderId: mongoose.Types.ObjectId;
     subscriptionId?: mongoose.Types.ObjectId;
+    billingScheduleId?: mongoose.Types.ObjectId;
     customerId: mongoose.Types.ObjectId;
+    invoiceType: 'ONE_TIME' | 'RECURRING' | 'ADJUSTMENT';
     lines: IInvoiceLine[];
     subtotal: number;
     taxTotal: number;
     grandTotal: number;
-    status: 'DRAFT' | 'ISSUED' | 'PAID' | 'VOID' | 'OVERDUE';
+    amountPaid: number;
+    amountDue: number;
+    currency: string;
+    status: 'DRAFT' | 'ISSUED' | 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' | 'OVERDUE' | 'VOID';
     dueDate: Date;
     paidAt?: Date;
     createdAt: Date;
@@ -44,12 +49,17 @@ const InvoiceSchema = new Schema({
     invoiceNumber: { type: String, required: true, unique: true },
     orderId: { type: Schema.Types.ObjectId, ref: 'Order', required: true },
     subscriptionId: { type: Schema.Types.ObjectId, ref: 'Subscription' },
+    billingScheduleId: { type: Schema.Types.ObjectId, ref: 'BillingSchedule' },
     customerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    invoiceType: { type: String, enum: ['ONE_TIME', 'RECURRING', 'ADJUSTMENT'], required: true, default: 'ONE_TIME' },
     lines: [InvoiceLineSchema],
     subtotal: { type: Number, required: true },
     taxTotal: { type: Number, required: true },
     grandTotal: { type: Number, required: true },
-    status: { type: String, enum: ['DRAFT', 'ISSUED', 'PAID', 'VOID', 'OVERDUE'], required: true, default: 'DRAFT' },
+    amountPaid: { type: Number, required: true, default: 0 },
+    amountDue: { type: Number, required: true },
+    currency: { type: String, required: true, default: 'INR' },
+    status: { type: String, enum: ['DRAFT', 'ISSUED', 'UNPAID', 'PARTIALLY_PAID', 'PAID', 'OVERDUE', 'VOID'], required: true, default: 'DRAFT' },
     dueDate: { type: Date, required: true },
     paidAt: { type: Date }
 }, { timestamps: true });

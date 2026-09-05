@@ -25,6 +25,10 @@ export default function InternalLayout() {
             items.push({ label: 'Fulfillment', path: '/internal/fulfillment' });
         }
 
+        if (role === 'FINANCE' || role === 'ADMIN') {
+            items.push({ label: 'Subscription & Billing', path: '/internal/billing' });
+        }
+
         if (role === 'ADMIN') {
             items.push({ label: 'Backend Config', path: '/internal/backend' });
         }

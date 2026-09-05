@@ -16,6 +16,7 @@ export default function QuotationBuilder() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [actionMessage, setActionMessage] = useState<string | null>(null);
     const [notes, setNotes] = useState('');
+    const [replyText, setReplyText] = useState('');
 
     const fetchQuote = async () => {
         try {
@@ -102,6 +103,17 @@ export default function QuotationBuilder() {
             setQuote(res.data);
         } catch (e) {
             alert('Failed removing line item');
+        }
+    };
+
+    const postReply = async () => {
+        if (!replyText) return;
+        try {
+            const res = await client.post(`/quotations/${id}/reply`, { message: replyText });
+            setQuote(res.data);
+            setReplyText('');
+        } catch (e) {
+            alert('Failed to post reply');
         }
     };
 
@@ -257,7 +269,7 @@ export default function QuotationBuilder() {
                                                     <td className="px-4 py-4 text-center">
                                                         <input
                                                             type="number" min="1" value={l.quantity}
-                                                            disabled={quote.status !== 'DRAFT'}
+                                                            disabled={!['DRAFT', 'UNDER_NEGOTIATION'].includes(quote.status)}
                                                             onChange={e => updateLine(l.id, Number(e.target.value), l.discountPercent)}
                                                             className="w-16 px-2 py-1.5 border border-slate-200 rounded text-center text-sm font-semibold outline-none focus:border-blue-500 transition disabled:bg-slate-50 disabled:text-slate-400"
                                                         />
@@ -269,7 +281,7 @@ export default function QuotationBuilder() {
                                                         <div className="flex items-center justify-center gap-1">
                                                             <input
                                                                 type="number" min="0" max="100" value={l.discountPercent}
-                                                                disabled={quote.status !== 'DRAFT'}
+                                                                disabled={!['DRAFT', 'UNDER_NEGOTIATION'].includes(quote.status)}
                                                                 onChange={e => updateLine(l.id, l.quantity, Number(e.target.value))}
                                                                 className={`w-16 px-2 py-1.5 border rounded text-center text-sm font-bold outline-none transition disabled:bg-slate-50 disabled:text-slate-400 ${isWarn ? 'border-amber-400 bg-amber-50 text-amber-900 focus:border-amber-500' : 'border-slate-200 focus:border-blue-500'}`}
                                                             />
@@ -285,7 +297,7 @@ export default function QuotationBuilder() {
                                                         {formatMoney(l.lineTotal || 0)}
                                                     </td>
                                                     <td className="px-4 py-4 text-center">
-                                                        <button disabled={quote.status !== 'DRAFT'} onClick={() => removeLine(l.id)} className="text-slate-400 hover:text-red-500 transition cursor-pointer p-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                                                        <button disabled={!['DRAFT', 'UNDER_NEGOTIATION'].includes(quote.status)} onClick={() => removeLine(l.id)} className="text-slate-400 hover:text-red-500 transition cursor-pointer p-1 disabled:opacity-50 disabled:cursor-not-allowed">
                                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                                                         </button>
                                                     </td>
@@ -307,10 +319,60 @@ export default function QuotationBuilder() {
                             <textarea
                                 value={notes}
                                 onChange={e => setNotes(e.target.value)}
+                                disabled={!['DRAFT', 'UNDER_NEGOTIATION'].includes(quote.status)}
                                 placeholder="Add customer-specific terms, delivery conditions, or deal justification..."
-                                className="w-full h-20 p-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition resize-y"
+                                className="w-full h-20 p-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition resize-y disabled:bg-slate-100 disabled:text-slate-500"
                             />
                         </div>
+                        
+                        {/* CUSTOMER NEGOTIATIONS THREAD */}
+                        {quote.negotiations && quote.negotiations.length > 0 && (
+                            <div className="p-6 bg-white border-t border-slate-200">
+                                <h3 className="text-sm font-bold text-slate-900 mb-4">Customer Negotiation Thread</h3>
+                                <div className="space-y-4">
+                                    {quote.negotiations.map((n: any) => {
+                                        const isCustomer = n.actorType === 'CUSTOMER';
+                                        return (
+                                            <div key={n._id} className={`flex flex-col ${isCustomer ? 'items-start' : 'items-end'}`}>
+                                                <div className={`px-4 py-3 rounded-2xl max-w-[80%] text-sm ${isCustomer ? 'bg-indigo-50 border border-indigo-100 text-slate-800 rounded-bl-none' : 'bg-slate-800 text-white rounded-br-none'}`}>
+                                                    {n.type === 'COUNTER_DISCOUNT' && (
+                                                        <div className={`text-xs font-bold mb-1 ${isCustomer ? 'text-indigo-600' : 'text-slate-300'}`}>
+                                                            Customer Proposed {n.requestedDiscountPercent}% discount
+                                                        </div>
+                                                    )}
+                                                    {n.message}
+                                                </div>
+                                                <div className="text-[10px] text-slate-400 mt-1">
+                                                    {isCustomer ? 'Customer' : 'You'} &bull; {new Date(n.createdAt).toLocaleString()}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                    
+                                    {['DRAFT', 'UNDER_NEGOTIATION'].includes(quote.status) && (
+                                        <div className="mt-4 pt-4 border-t border-slate-100">
+                                            <label className="block text-xs font-bold text-slate-700 mb-2">Reply to Customer:</label>
+                                            <div className="flex gap-2">
+                                                <input 
+                                                    type="text" 
+                                                    value={replyText}
+                                                    onChange={e => setReplyText(e.target.value)}
+                                                    placeholder="Type your reply to the customer..."
+                                                    className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500"
+                                                />
+                                                <button 
+                                                    onClick={postReply}
+                                                    disabled={!replyText}
+                                                    className="px-4 py-2 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-700 disabled:opacity-50"
+                                                >
+                                                    Send
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* 7. CATALOG & PRODUCTS */}
@@ -505,10 +567,10 @@ export default function QuotationBuilder() {
                     <div className="space-y-3 pt-2">
                         <button
                             onClick={handleSubmitForApproval}
-                            disabled={isSubmitting || quote.status !== 'DRAFT'}
+                            disabled={isSubmitting || !['DRAFT', 'UNDER_NEGOTIATION'].includes(quote.status)}
                             className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
                         >
-                            {isSubmitting ? 'Processing...' : quote.status !== 'DRAFT' ? `Quotation ${quote.status}` : 'Submit Quotation →'}
+                            {isSubmitting ? 'Processing...' : (!['DRAFT', 'UNDER_NEGOTIATION'].includes(quote.status)) ? `Quotation ${quote.status}` : 'Submit Quotation →'}
                         </button>
                         <button className="w-full py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-xl shadow-xs transition cursor-pointer">
                             Save as Draft

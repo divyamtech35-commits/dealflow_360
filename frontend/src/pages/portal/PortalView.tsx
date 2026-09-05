@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import client from '../../api/client';
 
 export default function PortalView() {
-    const { token } = useParams();
+    const { id } = useParams();
+    const navigate = useNavigate();
     const [quote, setQuote] = useState<any>(null);
     const [threads, setThreads] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -16,11 +18,9 @@ export default function PortalView() {
 
     const fetchPortalData = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/api/portal/quotations/${token}`);
-            if (!res.ok) throw new Error('Portal link invalid, expired, or voided.');
-            const data = await res.json();
-            setQuote(data.quotation);
-            setThreads(data.negotiations || []);
+            const res = await client.get(`/portal/quotations/${id}`);
+            setQuote(res.data.quotation);
+            setThreads(res.data.negotiations || []);
         } catch (e: any) {
             setError(e.message);
         } finally {
@@ -30,7 +30,7 @@ export default function PortalView() {
 
     useEffect(() => {
         fetchPortalData();
-    }, [token]);
+    }, [id]);
 
     const postAction = async (type: 'comment' | 'counter') => {
         try {
@@ -38,12 +38,8 @@ export default function PortalView() {
                 ? { lineId: activeLine, message: commentText }
                 : { lineId: activeLine, requestedDiscountPercent: Number(discountAmount), message: commentText };
 
-            const res = await fetch(`http://localhost:5000/api/portal/quotations/${token}/${type}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (!res.ok) throw new Error('Failed to submit request');
+            await client.post(`/portal/quotations/${id}/${type}`, payload);
+
             setCommentText('');
             setDiscountAmount('');
             setActiveLine(null);
@@ -56,12 +52,8 @@ export default function PortalView() {
     const confirmQuotation = async () => {
         if (!confirm('Are you sure you want to confirm these terms?')) return;
         try {
-            const res = await fetch(`http://localhost:5000/api/portal/quotations/${token}/confirm`, {
-                method: 'POST'
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to confirm');
-            setConfirmSuccess(data);
+            const res = await client.post(`/portal/quotations/${id}/confirm`);
+            setConfirmSuccess(res.data);
         } catch (e: any) {
             alert(e.message);
         }
@@ -102,8 +94,11 @@ export default function PortalView() {
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                         <div>
+                            <button onClick={() => navigate('/portal/dashboard')} className="text-xs text-slate-500 hover:text-slate-800 mb-2">← Back to Dashboard</button>
                             <h1 className="text-2xl font-bold text-slate-800">Quotation {quote.quotationNumber}</h1>
-                            <p className="text-slate-500 text-sm mt-1">Valid until {new Date(quote.validUntil).toLocaleDateString()}</p>
+                            {quote.validUntil && (
+                                <p className="text-slate-500 text-sm mt-1">Valid until {new Date(quote.validUntil).toLocaleDateString()}</p>
+                            )}
                         </div>
                         <div className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${quote.status === 'UNDER_NEGOTIATION' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
                             {quote.status}
@@ -128,9 +123,9 @@ export default function PortalView() {
                                         <td className="py-4 text-right">{l.quantity}</td>
                                         <td className="py-4 text-right">
                                             {l.discountPercent > 0 && <span className="text-emerald-500 text-xs mr-2 border border-emerald-200 bg-emerald-50 px-1 rounded">-{l.discountPercent}%</span>}
-                                            {quote.currency} {l.unitPrice.toLocaleString()}
+                                            {quote.currency} {Number(l.unitPrice || 0).toLocaleString()}
                                         </td>
-                                        <td className="py-4 text-right font-semibold text-slate-700">{quote.currency} {l.lineTotal.toLocaleString()}</td>
+                                        <td className="py-4 text-right font-semibold text-slate-700">{quote.currency} {Number(l.lineTotal || 0).toLocaleString()}</td>
                                         <td className="py-4 text-right">
                                             <button onClick={() => setActiveLine(l.id)} className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-md transition-colors text-xs font-semibold">
                                                 Discuss
@@ -147,15 +142,15 @@ export default function PortalView() {
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-6 flex flex-col items-end">
                     <div className="flex justify-between w-64 text-sm text-slate-600 mb-2">
                         <span>Subtotal</span>
-                        <span>{quote.currency} {quote.subtotal.toLocaleString()}</span>
+                        <span>{quote.currency} {Number(quote.subtotal || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between w-64 text-sm text-slate-600 mb-2 border-b border-slate-100 pb-2">
                         <span>Tax</span>
-                        <span>{quote.currency} {quote.taxAmount.toLocaleString()}</span>
+                        <span>{quote.currency} {Number(quote.taxAmount || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between w-64 text-xl font-bold text-slate-800 pt-2">
                         <span>Grand Total</span>
-                        <span>{quote.currency} {quote.totalAmount.toLocaleString()}</span>
+                        <span>{quote.currency} {Number(quote.totalAmount || 0).toLocaleString()}</span>
                     </div>
 
                     <button
@@ -169,13 +164,14 @@ export default function PortalView() {
             </div>
 
             {/* Right Pane: Negotiations / Actions */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-[600px]">
-                <h3 className="font-bold text-slate-800 mb-4">Negotiation Thread</h3>
+            {quote.status !== 'CONFIRMED' && (
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-[600px]">
+                    <h3 className="font-bold text-slate-800 mb-4">Negotiation Thread</h3>
 
-                <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
-                    {threads.length === 0 && (
-                        <div className="text-center text-slate-400 text-sm mt-10">No active discussions.</div>
-                    )}
+                    <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
+                        {threads.length === 0 && (
+                            <div className="text-center text-slate-400 text-sm mt-10">No active discussions.</div>
+                        )}
                     {threads.map(t => {
                         const isRep = t.actorType === 'REP';
                         return (
@@ -233,7 +229,8 @@ export default function PortalView() {
                         </button>
                     </div>
                 </div>
-            </div>
+                </div>
+            )}
         </div>
     );
 }

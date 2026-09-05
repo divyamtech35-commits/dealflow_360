@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import { portalAuthenticate } from '../middleware/portalAuth';
-import { getPortalQuotation, postComment, postCounter, confirmQuotation } from '../controllers/portal.controller';
+import { authenticate } from '../middleware/auth';
+import { getPortalQuotation, postComment, postCounter, confirmQuotation, getPortalDashboard } from '../controllers/portal.controller';
 
 const router = Router();
 
-router.get('/quotations/:token', portalAuthenticate, getPortalQuotation as any);
-router.post('/quotations/:token/comment', portalAuthenticate, postComment as any);
-router.post('/quotations/:token/counter', portalAuthenticate, postCounter as any);
-router.post('/quotations/:token/confirm', portalAuthenticate, confirmQuotation as any);
+router.get('/dashboard', authenticate, getPortalDashboard as any);
+router.get('/quotations/:id', authenticate, getPortalQuotation as any);
+router.post('/quotations/:id/comment', authenticate, postComment as any);
+router.post('/quotations/:id/counter', authenticate, postCounter as any);
+router.post('/quotations/:id/confirm', authenticate, confirmQuotation as any);
 
 export default router;
