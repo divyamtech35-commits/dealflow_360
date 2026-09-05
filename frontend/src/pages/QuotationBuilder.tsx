@@ -261,15 +261,37 @@ export default function QuotationBuilder() {
                     </div>
                 </div>
 
-                {/* Risk Badge Button */}
-                <button
-                    onClick={() => setShowRiskModal(true)}
-                    className={`px-4 py-2.5 rounded-2xl border text-xs font-bold transition shadow-xs hover:shadow-md flex items-center gap-2.5 cursor-pointer ${riskBadgeStyle}`}
-                >
-                    <span className={`w-2.5 h-2.5 rounded-full ${riskIndicatorDot}`} />
-                    <span>{riskBadgeText} (Score: {quote.riskScore || 0})</span>
-                    <span className="underline ml-1">Breakdown</span>
-                </button>
+                <div className="flex flex-wrap items-center gap-2.5">
+                    {/* Risk Badge Button */}
+                    <button
+                        onClick={() => setShowRiskModal(true)}
+                        className={`px-3.5 py-2 rounded-xl border text-xs font-bold transition shadow-xs hover:shadow-md flex items-center gap-2 cursor-pointer ${riskBadgeStyle}`}
+                    >
+                        <span className={`w-2 h-2 rounded-full ${riskIndicatorDot}`} />
+                        <span>{riskBadgeText} (Score: {quote.riskScore || 0})</span>
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/internal/fulfillment')}
+                        className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer"
+                    >
+                        Fulfillment
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/internal/billing')}
+                        className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer"
+                    >
+                        Billing
+                    </button>
+
+                    <button
+                        onClick={() => navigate(`/portal/quotes/${quote.id}`)}
+                        className="px-3 py-2 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition shadow-2xs cursor-pointer"
+                    >
+                        Customer View ↗
+                    </button>
+                </div>
             </div>
 
             {actionMessage && (
