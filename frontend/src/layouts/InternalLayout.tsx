@@ -14,8 +14,11 @@ export default function InternalLayout() {
         const role = user?.role;
         const items = [
             { label: 'Dashboard', path: '/internal/dashboard' },
-            { label: 'Quotations', path: '/internal/quotations' },
         ];
+
+        if (role === 'SALES_REP' || role === 'ADMIN') {
+            items.push({ label: 'Quotations', path: '/internal/quotations' });
+        }
 
         if (role === 'SALES_MANAGER' || role === 'FINANCE' || role === 'ADMIN') {
             items.push({ label: 'Approvals', path: '/internal/approvals' });
@@ -115,16 +118,18 @@ export default function InternalLayout() {
                 </nav>
 
                 {/* Sidebar Quick Action */}
-                <div className="px-4 pb-4">
-                    <button
-                        onClick={handleCreateQuote}
-                        disabled={isCreatingQuote}
-                        className="group-btn relative w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold tracking-wide shadow-md transition-all flex items-center justify-center overflow-hidden disabled:opacity-50 cursor-pointer"
-                    >
-                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full btn-shimmer pointer-events-none" />
-                        <span>{isCreatingQuote ? 'Creating...' : '+ New Quotation'}</span>
-                    </button>
-                </div>
+                {(user?.role === 'SALES_REP' || user?.role === 'ADMIN') && (
+                    <div className="px-4 pb-4">
+                        <button
+                            onClick={handleCreateQuote}
+                            disabled={isCreatingQuote}
+                            className="group-btn relative w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold tracking-wide shadow-md transition-all flex items-center justify-center overflow-hidden disabled:opacity-50 cursor-pointer"
+                        >
+                            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full btn-shimmer pointer-events-none" />
+                            <span>{isCreatingQuote ? 'Creating...' : '+ New Quotation'}</span>
+                        </button>
+                    </div>
+                )}
 
                 {/* User Profile Card & Logout */}
                 <div className="p-4 border-t border-slate-800/80 bg-[#0A0F1D]">

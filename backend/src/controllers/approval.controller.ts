@@ -41,6 +41,7 @@ export const submitQuotation = async (req: Request, res: Response, next: NextFun
         }
 
         q.requiredApprovalSteps = stepsArray;
+        q.markModified('requiredApprovalSteps');
         q.status = nextStatus;
         await q.save();
 
@@ -64,6 +65,7 @@ export const handleApprovalAction = (action: 'APPROVE' | 'REJECT' | 'RETURN') =>
             });
 
             q.requiredApprovalSteps = steps;
+            q.markModified('requiredApprovalSteps');
             q.status = nextStatus;
             await q.save();
 

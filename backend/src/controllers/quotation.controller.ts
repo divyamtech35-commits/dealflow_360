@@ -19,7 +19,7 @@ export const listQuotations = async (req: Request, res: Response, next: NextFunc
         else filter.salesRepId = req.user._id;
 
         const quotes = await Quotation.find(filter)
-            .populate('customerId', 'name tier')
+            .populate({ path: 'customerId', populate: { path: 'tier' } })
             .sort({ lastActivityAt: -1 });
 
         res.json(quotes.map(q => serializeQuotation(q)));
@@ -29,7 +29,7 @@ export const listQuotations = async (req: Request, res: Response, next: NextFunc
 export const getQuotation = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const quote = await Quotation.findById(req.params.id)
-            .populate('customerId', 'name tier _id');
+            .populate({ path: 'customerId', populate: { path: 'tier' } });
         if (!quote) return res.status(404).json({ error: 'Not found' });
 
         const lines = await QuotationLine.find({ quotationId: quote._id });
@@ -42,8 +42,8 @@ export const createQuotation = async (req: Request, res: Response, next: NextFun
         const { customerId } = req.body;
         let tierSnapshot = null;
         if (customerId) {
-            const user = await User.findById(customerId);
-            if (user && user.tier) tierSnapshot = { tier: user.tier };
+            const user = await User.findById(customerId).populate('tier');
+            if (user && user.tier) tierSnapshot = { _id: (user.tier as any)._id, tier: (user.tier as any).name };
         }
 
         const quote = await Quotation.create({
@@ -58,8 +58,19 @@ export const createQuotation = async (req: Request, res: Response, next: NextFun
 
 export const updateQuotation = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { orderDiscountPercent, notes } = req.body;
-        await Quotation.findByIdAndUpdate(req.params.id, { orderDiscountPercent, notes });
+        const { orderDiscountPercent, notes, customerId } = req.body;
+        
+        let updateData: any = { orderDiscountPercent, notes };
+        
+        if (customerId) {
+            updateData.customerId = customerId;
+            const user = await User.findById(customerId).populate('tier');
+            if (user && user.tier) {
+                updateData.customerTierSnapshot = { _id: (user.tier as any)._id, tier: (user.tier as any).name };
+            }
+        }
+
+        await Quotation.findByIdAndUpdate(req.params.id, updateData);
         const finalQ = await recalculateQuotation(req.params.id);
         const lines = await QuotationLine.find({ quotationId: finalQ._id });
         res.json(serializeQuotation(finalQ, lines));

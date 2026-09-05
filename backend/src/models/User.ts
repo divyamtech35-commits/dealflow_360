@@ -14,6 +14,7 @@ export interface IUser extends Document {
     passwordHash: string;
     role: UserRole;
     customerId?: mongoose.Types.ObjectId;
+    tier?: mongoose.Types.ObjectId;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -30,6 +31,7 @@ const UserSchema: Schema = new Schema(
             required: true,
         },
         customerId: { type: Schema.Types.ObjectId, ref: 'User' },
+        tier: { type: Schema.Types.ObjectId, ref: 'CustomerTier' },
         isActive: { type: Boolean, default: true },
     },
     { timestamps: true }

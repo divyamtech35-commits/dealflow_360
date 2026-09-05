@@ -5,7 +5,6 @@ export const subMoney = (a: number, b: number): number => a - b;
 export const mulMoney = (paise: number, qty: number): number => Math.round(paise * qty);
 export const pctOf = (paise: number, pct: number): number => Math.round((paise * pct) / 100);
 export const applyPct = (paise: number, pct: number): number => Math.round(paise + (paise * pct) / 100);
-export const formatINR = (paise: number): string => {
-    const rupees = toRupees(paise);
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(rupees);
+export const formatINR = (amount: number): string => {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
 };

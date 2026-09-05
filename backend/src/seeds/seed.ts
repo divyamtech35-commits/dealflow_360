@@ -84,25 +84,49 @@ const runSeed = async () => {
 
         // Create internal users
         const internalUsers = [
-            { name: 'Alice Admin', email: 'admin@dealflow.com', passwordHash, role: UserRole.ADMIN },
-            { name: 'Bob Rep', email: 'bob@dealflow.com', passwordHash, role: UserRole.SALES_REP },
-            { name: 'Sales Rep', email: 'rep@dealflow.com', passwordHash, role: UserRole.SALES_REP },
-            { name: 'Charlie Rep', email: 'charlie@dealflow.com', passwordHash, role: UserRole.SALES_REP },
-            { name: 'Dave Manager', email: 'manager@dealflow.com', passwordHash, role: UserRole.SALES_MANAGER },
-            { name: 'Eve Finance', email: 'finance@dealflow.com', passwordHash, role: UserRole.FINANCE },
+            { name: 'Alice Admin', email: 'admin@dealflow360.com', passwordHash, role: UserRole.ADMIN },
+            { name: 'Sales Rep', email: 'sales@dealflow360.com', passwordHash, role: UserRole.SALES_REP },
+            { name: 'Dave Manager', email: 'manager@dealflow360.com', passwordHash, role: UserRole.SALES_MANAGER },
+            { name: 'Eve Finance', email: 'finance@dealflow360.com', passwordHash, role: UserRole.FINANCE },
         ];
         await User.insertMany(internalUsers);
 
-        // Create a customer user
-        const customer = new User({
-            name: 'Acme Corp Customer',
-            email: 'buyer@acmecorp.com',
-            passwordHash,
-            role: UserRole.CUSTOMER,
+        const goldTier = createdTiers.find(t => t.name === 'Gold');
+        const silverTier = createdTiers.find(t => t.name === 'Silver');
+        const bronzeTier = createdTiers.find(t => t.name === 'Bronze');
+
+        // Create 15 customer users
+        const companies = [
+            { name: 'Acme Corporation', tier: goldTier?._id },
+            { name: 'Stark Industries', tier: goldTier?._id },
+            { name: 'Wayne Enterprises', tier: goldTier?._id },
+            { name: 'Cyberdyne Systems', tier: silverTier?._id },
+            { name: 'Massive Dynamic', tier: silverTier?._id },
+            { name: 'Umbrella Corp', tier: silverTier?._id },
+            { name: 'Oscorp', tier: silverTier?._id },
+            { name: 'Hooli', tier: silverTier?._id },
+            { name: 'Initech', tier: bronzeTier?._id },
+            { name: 'Globex Corp', tier: bronzeTier?._id },
+            { name: 'Soylent Corp', tier: bronzeTier?._id },
+            { name: 'LexCorp', tier: bronzeTier?._id },
+            { name: 'Tyrell Corporation', tier: bronzeTier?._id },
+            { name: 'Virtucon', tier: bronzeTier?._id },
+            { name: 'Dunder Mifflin', tier: bronzeTier?._id }
+        ];
+
+        const customersToInsert = companies.map((c, i) => {
+            const customer = new User({
+                name: c.name,
+                email: `customer${i + 1}@dealflow360.com`,
+                passwordHash,
+                role: UserRole.CUSTOMER,
+                tier: c.tier,
+            });
+            customer.customerId = customer._id as mongoose.Types.ObjectId;
+            return customer;
         });
-        // For customers, the customerId maps to themselves (or a Company entity in the future)
-        customer.customerId = customer._id as mongoose.Types.ObjectId;
-        await customer.save();
+
+        await User.insertMany(customersToInsert);
 
         console.log('Seeding Stocks...');
         // Seed some stock for the Main Warehouse

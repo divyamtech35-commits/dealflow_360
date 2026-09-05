@@ -150,14 +150,16 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                    <button
-                        onClick={handleCreateQuote}
-                        disabled={isCreating}
-                        className="group-btn relative px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all overflow-hidden cursor-pointer"
-                    >
-                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full btn-shimmer pointer-events-none" />
-                        <span>{isCreating ? 'Creating...' : '+ New Quotation'}</span>
-                    </button>
+                    {(user?.role === 'SALES_REP' || user?.role === 'ADMIN') && (
+                        <button
+                            onClick={handleCreateQuote}
+                            disabled={isCreating}
+                            className="group-btn relative px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all overflow-hidden cursor-pointer"
+                        >
+                            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full btn-shimmer pointer-events-none" />
+                            <span>{isCreating ? 'Creating...' : '+ New Quotation'}</span>
+                        </button>
+                    )}
 
                     <button
                         onClick={() => navigate('/internal/quotations')}
@@ -320,12 +322,14 @@ export default function Dashboard() {
                             <div className="p-10 text-center border-2 border-dashed border-slate-100 rounded-2xl">
                                 <div className="text-sm font-bold text-slate-700">No matching quotations found</div>
                                 <p className="text-xs text-slate-400 mt-1 mb-4">Create your first deal proposal to start pipeline progression.</p>
-                                <button
-                                    onClick={handleCreateQuote}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700"
-                                >
-                                    + Create First Quote
-                                </button>
+                                {(user?.role === 'SALES_REP' || user?.role === 'ADMIN') && (
+                                    <button
+                                        onClick={handleCreateQuote}
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700"
+                                    >
+                                        + Create First Quote
+                                    </button>
+                                )}
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
@@ -434,31 +438,33 @@ export default function Dashboard() {
                     </div>
 
                     {/* Quick Preset Deal Launcher */}
-                    <div className="mt-8 pt-6 border-t border-slate-100">
-                        <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
-                            Quick Proposal Templates
+                    {(user?.role === 'SALES_REP' || user?.role === 'ADMIN') && (
+                        <div className="mt-8 pt-6 border-t border-slate-100">
+                            <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
+                                Quick Proposal Templates
+                            </div>
+                            <div className="space-y-2">
+                                <button
+                                    onClick={handleCreateQuote}
+                                    className="w-full text-left p-2.5 rounded-xl border border-slate-200/70 hover:border-blue-300 hover:bg-blue-50/50 transition flex items-center justify-between text-xs group"
+                                >
+                                    <span className="font-semibold text-slate-800 group-hover:text-blue-600">
+                                        Enterprise Server Bundle
+                                    </span>
+                                    <span className="text-slate-400 text-[11px]">$4,000</span>
+                                </button>
+                                <button
+                                    onClick={handleCreateQuote}
+                                    className="w-full text-left p-2.5 rounded-xl border border-slate-200/70 hover:border-blue-300 hover:bg-blue-50/50 transition flex items-center justify-between text-xs group"
+                                >
+                                    <span className="font-semibold text-slate-800 group-hover:text-blue-600">
+                                        Pro Laptop + 3Yr Warranty
+                                    </span>
+                                    <span className="text-slate-400 text-[11px]">$1,350</span>
+                                </button>
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <button
-                                onClick={handleCreateQuote}
-                                className="w-full text-left p-2.5 rounded-xl border border-slate-200/70 hover:border-blue-300 hover:bg-blue-50/50 transition flex items-center justify-between text-xs group"
-                            >
-                                <span className="font-semibold text-slate-800 group-hover:text-blue-600">
-                                    Enterprise Server Bundle
-                                </span>
-                                <span className="text-slate-400 text-[11px]">$4,000</span>
-                            </button>
-                            <button
-                                onClick={handleCreateQuote}
-                                className="w-full text-left p-2.5 rounded-xl border border-slate-200/70 hover:border-blue-300 hover:bg-blue-50/50 transition flex items-center justify-between text-xs group"
-                            >
-                                <span className="font-semibold text-slate-800 group-hover:text-blue-600">
-                                    Pro Laptop + 3Yr Warranty
-                                </span>
-                                <span className="text-slate-400 text-[11px]">$1,350</span>
-                            </button>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>

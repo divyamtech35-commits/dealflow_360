@@ -41,7 +41,7 @@ export const getProductById = async (req: Request, res: Response, next: NextFunc
 
 export const getCustomers = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customers = await User.find({ role: 'CUSTOMER' }).select('-passwordHash');
+        const customers = await User.find({ role: 'CUSTOMER' }).select('-passwordHash').populate('tier');
         res.json(customers);
     } catch (error) { next(error); }
 };

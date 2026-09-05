@@ -4,8 +4,12 @@ export const serializeQuotation = (q: any, lines?: any[]) => {
     const base = {
         id: q._id,
         quotationNumber: q.quotationNumber,
-        customerId: q.customerId,
+        customerId: q.customerId?._id || q.customerId,
         customerName: q.customerId?.name || 'Unknown',
+        customerTierSnapshot: {
+            ...q.customerTierSnapshot,
+            tier: q.customerId?.tier?.name || (typeof q.customerTierSnapshot?.tier === 'string' && q.customerTierSnapshot.tier.length !== 24 ? q.customerTierSnapshot.tier : 'Unknown')
+        },
         status: q.status,
         subtotal: q.subtotal,
         subtotalFormatted: formatINR(q.subtotal),
@@ -40,6 +44,8 @@ export const serializeQuotation = (q: any, lines?: any[]) => {
                 quantity: l.quantity,
                 discountPercent: l.discountPercent,
                 unitPrice: l.unitPrice,
+                costPrice: l.costPrice || 0,
+                unitPriceFormatted: formatINR(l.unitPrice),
                 unitPriceFormatted: formatINR(l.unitPrice),
                 lineTotal,
                 lineTotalFormatted: formatINR(lineTotal),

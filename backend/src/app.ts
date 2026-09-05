@@ -25,6 +25,9 @@ app.use('/api/approvals', approvalRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/billing', billingRoutes);
 
+import { errorHandler } from './middleware/errorHandler';
+app.use(errorHandler);
+
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
 });
