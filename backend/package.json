@@ -6,7 +6,9 @@
   "scripts": {
     "test": "jest",
     "dev": "nodemon --exec tsx src/app.ts",
-    "seed": "tsx src/seeds/seedData.ts"
+    "seed": "tsx src/seeds/seed.ts && tsx src/seeds/seedUpsells.ts",
+    "seed:base": "tsx src/seeds/seed.ts",
+    "seed:upsells": "tsx src/seeds/seedUpsells.ts"
   },
   "keywords": [],
   "author": "",

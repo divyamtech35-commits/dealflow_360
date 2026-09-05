@@ -86,6 +86,7 @@ const runSeed = async () => {
         const internalUsers = [
             { name: 'Alice Admin', email: 'admin@dealflow.com', passwordHash, role: UserRole.ADMIN },
             { name: 'Bob Rep', email: 'bob@dealflow.com', passwordHash, role: UserRole.SALES_REP },
+            { name: 'Sales Rep', email: 'rep@dealflow.com', passwordHash, role: UserRole.SALES_REP },
             { name: 'Charlie Rep', email: 'charlie@dealflow.com', passwordHash, role: UserRole.SALES_REP },
             { name: 'Dave Manager', email: 'manager@dealflow.com', passwordHash, role: UserRole.SALES_MANAGER },
             { name: 'Eve Finance', email: 'finance@dealflow.com', passwordHash, role: UserRole.FINANCE },

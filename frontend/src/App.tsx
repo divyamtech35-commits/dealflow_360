@@ -5,14 +5,15 @@ import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
 import InternalLayout from './layouts/InternalLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import AuthLayout from './layouts/AuthLayout';
 
+import Dashboard from './pages/Dashboard';
 import QuotationList from './pages/QuotationList';
 import QuotationBuilder from './pages/QuotationBuilder';
 import ApprovalQueue from './pages/ApprovalQueue';
 import ApprovalDetail from './pages/ApprovalDetail';
 import FulfillmentScreen from './pages/FulfillmentScreen';
 
-const DummyDashboard = () => <div className="text-white p-8 font-bold">Dashboard Section (Coming Soon)</div>;
 const DummyBackend = () => <div className="text-white p-8 font-bold">Admin Config Engine (Coming Soon)</div>;
 
 function App() {
@@ -21,12 +22,12 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<AuthLayout><Login /></AuthLayout>} />
+          <Route path="/signup" element={<AuthLayout><Signup /></AuthLayout>} />
 
           <Route path="/internal" element={<ProtectedRoute />}>
             <Route element={<InternalLayout />}>
-              <Route path="dashboard" element={<DummyDashboard />} />
+              <Route path="dashboard" element={<Dashboard />} />
 
               <Route path="quotations" element={<QuotationList />} />
               <Route path="quotations/:id" element={<QuotationBuilder />} />

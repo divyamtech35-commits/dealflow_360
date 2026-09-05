@@ -1,21 +1,35 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 
 export default function FulfillmentScreen() {
+    const navigate = useNavigate();
     const [quotes, setQuotes] = useState<any[]>([]);
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [plan, setPlan] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [statusNote, setStatusNote] = useState<string | null>(null);
 
     const fetchQuotes = async () => {
+        setIsLoading(true);
         try {
             const res = await client.get('/quotations?status=APPROVED');
-            setQuotes(res.data.filter((q: any) => q.status === 'APPROVED'));
-        } catch (e) { console.error(e); }
+            setQuotes((res.data || []).filter((q: any) => q.status === 'APPROVED'));
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    useEffect(() => { fetchQuotes(); }, []);
+    useEffect(() => {
+        fetchQuotes();
+    }, []);
 
     const processSplit = async (quote: any) => {
+        setIsProcessing(true);
+        setStatusNote(null);
         try {
             // Create Order
             let orderRes;
@@ -23,8 +37,7 @@ export default function FulfillmentScreen() {
                 orderRes = await client.post(`/orders/from-quotation/${quote._id}`);
             } catch (e: any) {
                 if (e.response?.status === 400 && e.response?.data?.error === 'Order already exists for this quotation') {
-                    // Hack for demo: assume we just get split plan directly if we had a GET /orders/by-quotation logic.
-                    alert("Order exists. This demo expects fresh quotes.");
+                    alert('Order already exists for this quotation.');
                     return;
                 }
                 throw e;
@@ -36,86 +49,176 @@ export default function FulfillmentScreen() {
             // Fetch Plan
             const planRes = await client.get(`/orders/${order._id}/split-plan`);
             setPlan(planRes.data);
-
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("Failed to process split");
+            alert(e.response?.data?.error || 'Failed to process split plan');
+        } finally {
+            setIsProcessing(false);
         }
     };
 
     const acceptPlan = async () => {
         if (!selectedOrder) return;
+        setIsProcessing(true);
         try {
             await client.post(`/orders/${selectedOrder._id}/accept-split`);
-            alert("Fulfillment plan accepted and stock reserved!");
+            setStatusNote('Fulfillment plan accepted and inventory reserved across warehouses!');
             setPlan(null);
             setSelectedOrder(null);
-            fetchQuotes(); // Refresh
+            fetchQuotes();
         } catch (e: any) {
-            alert(e.response?.data?.error || "Failed to accept split");
+            alert(e.response?.data?.error || 'Failed to accept split plan');
+        } finally {
+            setIsProcessing(false);
         }
     };
 
     if (plan && selectedOrder) {
         return (
-            <div className="p-8 text-slate-300">
-                <h1 className="text-2xl font-bold text-white mb-2">Fulfillment Layout</h1>
-                <p className="text-slate-400 mb-8">Order: {selectedOrder.orderNumber}</p>
+            <div className="max-w-7xl mx-auto space-y-6 pb-20">
+                {/* Header */}
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <button
+                                onClick={() => setPlan(null)}
+                                className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                            >
+                                ← Back to Queue
+                            </button>
+                            <span className="text-slate-300">•</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">
+                                Stock Split & Routing
+                            </span>
+                        </div>
+                        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                            Order {selectedOrder.orderNumber || 'SO-NEW'}
+                        </h1>
+                        <p className="text-slate-500 text-xs sm:text-sm mt-1">
+                            Multi-warehouse stock allocation and courier optimization.
+                        </p>
+                    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    {plan.allocations.map((a: any, i: number) => (
-                        <div key={i} className="bg-[#1A1A1A] border border-white/10 rounded-xl p-5 shadow-lg">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-bold text-white text-lg flex items-center gap-2">
-                                    <span className="text-emerald-500">📍</span> {a.warehouseName}
-                                </h3>
-                            </div>
-                            <div className="space-y-3 mb-6">
-                                {a.lines.map((l: any, idx: number) => (
-                                    <div key={idx} className="flex justify-between items-center bg-white/5 p-2 rounded">
-                                        <span className="text-sm">{l.productName}</span>
-                                        <span className="font-bold">x{l.quantity}</span>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setPlan(null)}
+                            className="px-4 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-bold text-xs shadow-xs transition"
+                        >
+                            Cancel Plan
+                        </button>
+                    </div>
+                </div>
+
+                {/* Warehouse Allocation Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {plan.allocations?.map((a: any, i: number) => (
+                        <div
+                            key={i}
+                            className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs flex flex-col justify-between"
+                        >
+                            <div>
+                                <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                                        <h3 className="font-bold text-slate-900 text-sm">
+                                            {a.warehouseName}
+                                        </h3>
                                     </div>
-                                ))}
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        In Stock
+                                    </span>
+                                </div>
+
+                                <div className="space-y-2.5 mb-6">
+                                    {a.lines?.map((l: any, idx: number) => (
+                                        <div
+                                            key={idx}
+                                            className="flex justify-between items-center bg-slate-50/70 p-3 rounded-xl border border-slate-200/60 text-xs"
+                                        >
+                                            <span className="font-semibold text-slate-800">{l.productName}</span>
+                                            <span className="font-black text-slate-900">Qty: {l.quantity}</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="pt-4 border-t border-white/10 flex justify-between items-center">
-                                <span className="text-xs text-slate-500 uppercase font-bold">Courier Cost</span>
-                                <span className="font-mono text-emerald-400">${a.shipmentCost.toFixed(2)}</span>
+
+                            <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                                    Courier Shipping Cost
+                                </span>
+                                <span className="font-black text-slate-900 text-sm">
+                                    ${Number(a.shipmentCost || 0).toFixed(2)}
+                                </span>
                             </div>
                         </div>
                     ))}
 
-                    {plan.backorders.length > 0 && plan.backorders.map((a: any, i: number) => (
-                        <div key={`bo-${i}`} className="bg-red-500/10 border border-red-500/30 rounded-xl p-5 shadow-lg relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/20 translate-x-8 -translate-y-8 rotate-45"></div>
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-bold text-red-500 text-lg flex items-center gap-2">
-                                    <span className="text-red-500 text-xl">⚠️</span> Backorder
-                                </h3>
-                            </div>
-                            <div className="space-y-3 mb-6">
-                                {a.lines.map((l: any, idx: number) => (
-                                    <div key={idx} className="flex justify-between items-center bg-red-500/10 p-2 rounded border border-red-500/20">
-                                        <span className="text-sm text-red-100">{l.productName}</span>
-                                        <span className="font-bold text-red-400">x{l.quantity} pending</span>
+                    {/* Backorders Card */}
+                    {plan.backorders && plan.backorders.length > 0 && plan.backorders.map((a: any, i: number) => (
+                        <div
+                            key={`bo-${i}`}
+                            className="bg-red-50/60 border border-red-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between"
+                        >
+                            <div>
+                                <div className="flex items-center justify-between pb-3 border-b border-red-200/60 mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                                        <h3 className="font-bold text-red-900 text-sm">
+                                            Backorder Allocation
+                                        </h3>
                                     </div>
-                                ))}
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-300">
+                                        Pending Restock
+                                    </span>
+                                </div>
+
+                                <div className="space-y-2.5 mb-6">
+                                    {a.lines?.map((l: any, idx: number) => (
+                                        <div
+                                            key={idx}
+                                            className="flex justify-between items-center bg-white p-3 rounded-xl border border-red-200 text-xs"
+                                        >
+                                            <span className="font-semibold text-red-950">{l.productName}</span>
+                                            <span className="font-black text-red-600">x{l.quantity} pending</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="pt-4 border-t border-red-500/20 text-xs text-red-400">
-                                Awaiting restock to fulfill.
+
+                            <div className="pt-4 border-t border-red-200/60 text-xs text-red-700 font-medium">
+                                Split shipment will trigger automatically once restock lands.
                             </div>
                         </div>
                     ))}
                 </div>
 
-                <div className="bg-[#1A1A1A] border border-blue-500/30 p-6 rounded-xl flex items-center justify-between shadow-[0_0_30px_rgba(37,99,235,0.1)]">
+                {/* Confirm Routing Bar */}
+                <div className="bg-white border border-blue-200 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
                     <div>
-                        <h4 className="text-white font-bold text-lg mb-1">Confirm Smart Routing</h4>
-                        <p className="text-slate-400 text-sm">Totals: {plan.shipmentCount} Shipments, ${plan.totalShippingCost} Shipping Cost</p>
+                        <h4 className="text-slate-900 font-bold text-base">
+                            Confirm Smart Fulfillment Routing
+                        </h4>
+                        <p className="text-slate-500 text-xs mt-0.5">
+                            Total Deliveries: <span className="font-bold text-slate-800">{plan.shipmentCount || 1} Shipments</span> • Estimated Shipping: <span className="font-bold text-slate-800">${Number(plan.totalShippingCost || 0).toFixed(2)}</span>
+                        </p>
                     </div>
-                    <div className="flex gap-4">
-                        <button onClick={() => setPlan(null)} className="px-6 py-2 rounded font-bold text-slate-300 hover:text-white transition">Cancel</button>
-                        <button onClick={acceptPlan} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-2 rounded shadow-lg transition-transform hover:scale-105 active:scale-95">Accept & Reserve</button>
+
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <button
+                            onClick={() => setPlan(null)}
+                            disabled={isProcessing}
+                            className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-xs text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={acceptPlan}
+                            disabled={isProcessing}
+                            className="group-btn relative flex-1 sm:flex-none px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs shadow-md transition overflow-hidden cursor-pointer"
+                        >
+                            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full btn-shimmer pointer-events-none" />
+                            <span>{isProcessing ? 'Reserving Inventory...' : 'Accept & Reserve Stock'}</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -123,25 +226,88 @@ export default function FulfillmentScreen() {
     }
 
     return (
-        <div className="p-8 text-slate-300">
-            <h1 className="text-2xl font-bold text-white mb-6">Fulfillment Queue</h1>
-            {quotes.length === 0 ? (
-                <div className="bg-[#1A1A1A] border border-white/10 rounded-xl p-8 text-center text-slate-500">
-                    No approved quotations pending fulfillment.
+        <div className="max-w-7xl mx-auto space-y-8 pb-16">
+            {/* Header */}
+            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                            Logistics & Warehousing
+                        </span>
+                        <span className="text-xs text-slate-400">•</span>
+                        <span className="text-xs font-semibold text-slate-500">
+                            Fulfillment Center
+                        </span>
+                    </div>
+                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                        Fulfillment Queue
+                    </h1>
+                    <p className="text-slate-500 text-xs sm:text-sm mt-1 max-w-2xl">
+                        Approved quotations ready for warehouse stock reservation, backorder isolation, and carrier dispatch.
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => navigate('/internal/quotations')}
+                        className="px-4 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-bold text-xs shadow-xs transition"
+                    >
+                        View All Quotes
+                    </button>
+                </div>
+            </div>
+
+            {statusNote && (
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center justify-between animate-in fade-in">
+                    <span>{statusNote}</span>
+                    <button onClick={() => setStatusNote(null)} className="text-emerald-600 hover:text-emerald-900 font-bold ml-4">✕</button>
+                </div>
+            )}
+
+            {/* Approved Quotes Grid */}
+            {isLoading ? (
+                <div className="p-12 text-center text-xs text-slate-400">Loading approved fulfillment queue...</div>
+            ) : quotes.length === 0 ? (
+                <div className="p-12 text-center bg-white rounded-3xl border border-dashed border-slate-200">
+                    <h3 className="text-base font-bold text-slate-800">No Approved Quotes Pending Fulfillment</h3>
+                    <p className="text-xs text-slate-400 mt-1">
+                        Once quotations complete manager and finance approvals, they will appear here ready for warehouse routing.
+                    </p>
                 </div>
             ) : (
                 <div className="space-y-4">
                     {quotes.map(q => (
-                        <div key={q._id} className="bg-[#1A1A1A] border border-white/10 rounded-xl p-5 flex items-center justify-between hover:bg-[#202020] transition-colors">
+                        <div
+                            key={q._id}
+                            className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs hover:shadow-md transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                        >
                             <div>
-                                <div className="text-white font-bold text-lg mb-1">{q.quotationNumber} - {q.customerName}</div>
-                                <div className="text-sm text-slate-400 flex gap-4">
-                                    <span>Total: ${q.totalAmount.toLocaleString()}</span>
-                                    <span>Margin: {q.marginPct?.toFixed(1)}%</span>
+                                <div className="flex items-center gap-3 mb-1">
+                                    <span className="text-xs font-bold text-blue-600 tracking-wider">
+                                        {q.quotationNumber}
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        {q.status}
+                                    </span>
+                                </div>
+
+                                <h3 className="text-base font-bold text-slate-900">
+                                    {q.customerName || 'Enterprise Customer'}
+                                </h3>
+
+                                <div className="text-xs text-slate-400 flex items-center gap-4 mt-1">
+                                    <span>Total: <span className="font-semibold text-slate-700">${Number(q.totalAmount || 0).toLocaleString()}</span></span>
+                                    <span>•</span>
+                                    <span>Margin: <span className="font-semibold text-emerald-600">{q.marginPct?.toFixed(1)}%</span></span>
                                 </div>
                             </div>
-                            <button onClick={() => processSplit(q)} className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-2 rounded transition-colors">
-                                Plan Split →
+
+                            <button
+                                onClick={() => processSplit(q)}
+                                disabled={isProcessing}
+                                className="px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white font-bold rounded-xl text-xs transition shadow-xs cursor-pointer self-stretch sm:self-auto text-center"
+                            >
+                                Plan Order Split →
                             </button>
                         </div>
                     ))}
@@ -150,3 +316,4 @@ export default function FulfillmentScreen() {
         </div>
     );
 }
+

@@ -54,7 +54,41 @@
     @apply border-border;
   }
 
-  body {
+  html,
+  body,
+  #root {
     @apply bg-background text-foreground;
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
   }
 }
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-150%);
+  }
+  50% {
+    transform: translateX(150%);
+  }
+  100% {
+    transform: translateX(150%);
+  }
+}
+
+.group-btn:hover .btn-shimmer {
+  animation: shimmer 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spinSlow 8s linear infinite;
+}
