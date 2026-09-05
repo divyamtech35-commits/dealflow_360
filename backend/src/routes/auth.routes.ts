@@ -1,8 +1,10 @@
 import { Router } from 'express';
-import { login } from '../controllers/auth.controller';
+import { login, signup, me } from '../controllers/auth.controller';
+import { authenticate } from '../middleware/auth';
 
 const router = Router();
-
+router.post('/signup', signup);
 router.post('/login', login);
+router.get('/me', authenticate, me);
 
 export default router;

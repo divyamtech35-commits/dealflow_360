@@ -1,50 +1,78 @@
-import { Request, Response } from 'express';
-import { CustomerTier } from '../models/CustomerTier';
-import { Category } from '../models/Category';
+import { Request, Response, NextFunction } from 'express';
 import { Product } from '../models/Product';
+import { Category } from '../models/Category';
+import { User } from '../models/User';
+import { DiscountRule } from '../models/DiscountRule';
 import { Warehouse } from '../models/Warehouse';
 import { SubscriptionPlan } from '../models/SubscriptionPlan';
-import { DiscountRule } from '../models/DiscountRule';
+import { ApprovalLog } from '../models/ApprovalLog'; // Placeholder for approval chain
+import { resolveUnitPrice } from '../services/pricingEngine';
 
-export const getTiers = async (req: Request, res: Response) => {
-    const tiers = await CustomerTier.find();
-    res.json(tiers);
+export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { category, search } = req.query;
+        let filter: any = {};
+        if (category) filter.categoryId = category;
+        if (search) filter.name = { $regex: search, $options: 'i' };
+
+        const products = await Product.find(filter).populate('categoryId');
+        res.json(products);
+    } catch (error) { next(error); }
 };
 
-export const getCategories = async (req: Request, res: Response) => {
-    const categories = await Category.find();
-    res.json(categories);
+export const getProductById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const { customerId } = req.query;
+
+        const product = await Product.findById(id).lean();
+        if (!product) { res.status(404).json({ error: 'Not found' }); return; }
+
+        // Demoing the resolved price logic (requires customer tier/rules fetch)
+        let finalPrice = product.basePrice;
+        if (customerId) {
+            const rules = await DiscountRule.find({}); // simplified
+            finalPrice = resolveUnitPrice(product, rules);
+        }
+
+        res.json({ ...product, resolvedPrice: finalPrice });
+    } catch (error) { next(error); }
 };
 
-export const getProducts = async (req: Request, res: Response) => {
-    const products = await Product.find().populate('categoryId');
-    res.json(products);
+export const getCustomers = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const customers = await User.find({ role: 'CUSTOMER' }).select('-passwordHash');
+        res.json(customers);
+    } catch (error) { next(error); }
 };
 
-export const getWarehouses = async (req: Request, res: Response) => {
-    const warehouses = await Warehouse.find();
-    res.json(warehouses);
+export const getDiscountRules = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const rules = await DiscountRule.find();
+        res.json(rules);
+    } catch (error) { next(error); }
 };
 
-export const getPlans = async (req: Request, res: Response) => {
-    const plans = await SubscriptionPlan.find();
-    res.json(plans);
+export const getApprovalChain = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // Return static config for now
+        res.json([
+            { role: 'SALES_MANAGER', threshold: 15 },
+            { role: 'FINANCE', threshold: 25 },
+        ]);
+    } catch (error) { next(error); }
 };
 
-export const getDiscountRules = async (req: Request, res: Response) => {
-    const rules = await DiscountRule.find().populate('customerTierId').populate('categoryId');
-    res.json(rules);
+export const getWarehouses = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const w = await Warehouse.find();
+        res.json(w);
+    } catch (error) { next(error); }
 };
 
-// Generic create endpoint logic
-export const createTier = async (req: Request, res: Response) => {
-    const tier = await CustomerTier.create(req.body);
-    res.json(tier);
+export const getPlans = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const p = await SubscriptionPlan.find();
+        res.json(p);
+    } catch (error) { next(error); }
 };
-
-export const createProduct = async (req: Request, res: Response) => {
-    const product = await Product.create(req.body);
-    res.json(product);
-};
-
-//... Similarly for others as needed in the UI. For hackathon speed, we focus on the GETs to populate the quotation builder heavily.

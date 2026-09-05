@@ -1,22 +1,47 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
-import Workspace from './pages/Workspace';
-import QuotationBuilder from './pages/QuotationBuilder';
+import { AuthProvider } from './store/AuthContext';
+import Login from './pages/auth/Login';
+import Signup from './pages/auth/Signup';
+import InternalLayout from './layouts/InternalLayout';
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Placeholders for InternalLayout nav
+const DummyDashboard = () => <div className="text-white">Dashboard Placeholder</div>;
+const DummyPipeline = () => <div className="text-white">Pipeline Placeholder</div>;
+const DummyApprovals = () => <div className="text-white">Approvals Placeholder</div>;
+const DummyBackend = () => <div className="text-white">Backend Config Placeholder</div>;
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-background font-sans text-foreground">
+    <AuthProvider>
+      <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/workspace" element={<Workspace />} />
-          <Route path="/workspace/quote/:id" element={<QuotationBuilder />} />
-          <Route path="/workspace/quote/new" element={<QuotationBuilder />} />
+          <Route path="/signup" element={<Signup />} />
+
+          {/* Internal Routes fully protected via InternalLayout & AuthProvider */}
+          <Route path="/internal" element={<ProtectedRoute />}>
+            <Route element={<InternalLayout />}>
+              <Route path="dashboard" element={<DummyDashboard />} />
+              <Route path="quotations" element={<DummyPipeline />} />
+
+              {/* Specific Role Auth Guards */}
+              <Route element={<ProtectedRoute allowedRoles={['SALES_MANAGER', 'FINANCE', 'ADMIN']} />}>
+                <Route path="approvals" element={<DummyApprovals />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+                <Route path="backend" element={<DummyBackend />} />
+              </Route>
+            </Route>
+          </Route>
+
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-      </div>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

@@ -1,27 +1,26 @@
 import { Router } from 'express';
+import { authenticate } from '../middleware/auth';
 import {
-    getTiers,
-    getCategories,
     getProducts,
-    getWarehouses,
-    getPlans,
+    getProductById,
+    getCustomers,
     getDiscountRules,
-    createTier,
-    createProduct
+    getApprovalChain,
+    getWarehouses,
+    getPlans
 } from '../controllers/config.controller';
 
 const router = Router();
 
-router.get('/tiers', getTiers);
-router.post('/tiers', createTier);
-
-router.get('/categories', getCategories);
+// Protect ALL config routes with internal JWT auth
+router.use(authenticate);
 
 router.get('/products', getProducts);
-router.post('/products', createProduct);
-
+router.get('/products/:id', getProductById);
+router.get('/customers', getCustomers);
+router.get('/discount-rules', getDiscountRules);
+router.get('/approval-chain', getApprovalChain);
 router.get('/warehouses', getWarehouses);
 router.get('/plans', getPlans);
-router.get('/rules', getDiscountRules);
 
 export default router;

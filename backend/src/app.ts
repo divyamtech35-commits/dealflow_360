@@ -5,6 +5,7 @@ import { connectDB } from './config/db';
 
 import authRoutes from './routes/auth.routes';
 import configRoutes from './routes/config.routes';
+import quoteRoutes from './routes/quote.routes';
 
 dotenv.config();
 connectDB();
@@ -16,6 +17,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/quotes', quoteRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });

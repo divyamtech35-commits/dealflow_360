@@ -1,44 +1,38 @@
-import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/User';
+import { hashPassword, comparePassword, issueToken } from '../services/authService';
+import { ApiError } from '../utils/ApiError';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkeyforhackathon';
+export const signup = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { name, email, password, role } = req.body;
+        const existing = await User.findOne({ email });
+        if (existing) throw new ApiError(400, 'User already exists');
 
-export const login = async (req: Request, res: Response): Promise<void> => {
+        const pwdHash = await hashPassword(password);
+        const user = await User.create({ name, email, passwordHash: pwdHash, role });
+        res.status(201).json({ message: 'User created successfully', userId: user._id });
+    } catch (error) { next(error); }
+};
+
+export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
+        if (!user) throw new ApiError(401, 'Invalid credentials');
 
-        if (!user) {
-            res.status(401).json({ message: 'Invalid credentials' });
-            return;
-        }
+        const isMatch = await comparePassword(password, user.passwordHash);
+        if (!isMatch) throw new ApiError(401, 'Invalid credentials');
 
-        const isMatch = await bcrypt.compare(password, user.passwordHash);
-        if (!isMatch) {
-            res.status(401).json({ message: 'Invalid credentials' });
-            return;
-        }
+        const token = issueToken({ userId: user._id, role: user.role });
+        res.json({ token, user: { id: user._id, name: user.name, role: user.role, email: user.email } });
+    } catch (error) { next(error); }
+};
 
-        const token = jwt.sign(
-            { userId: user._id, role: user.role, customerId: user.customerId },
-            JWT_SECRET,
-            { expiresIn: '12h' }
-        );
-
-        res.json({
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                customerId: user.customerId
-            }
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
-    }
+export const me = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user;
+        if (!user) throw new ApiError(404, 'User not found');
+        res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+    } catch (error) { next(error); }
 };
