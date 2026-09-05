@@ -66,7 +66,7 @@ export const recalculateQuotation = async (quotationId: string) => {
     quote.marginAmount = totals.marginAmount;
     quote.marginPct = totals.marginPct;
     quote.riskScore = finalRiskScore;
-    quote.requiredApprovalSteps = reqSteps;
+    quote.requiredApprovalSteps = reqSteps.map((role: string) => ({ role, status: 'PENDING' }));
     quote.lastActivityAt = new Date();
 
     await quote.save();

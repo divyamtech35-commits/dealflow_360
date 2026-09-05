@@ -11,11 +11,14 @@ export const initApprovalSteps = (riskScore: number, requiredRoles: string[]): A
 };
 
 export const canAct = (quotation: any, user: any): boolean => {
-    if (quotation.salesRepId.toString() === user._id.toString()) return false;
+    if (quotation.salesRepId && quotation.salesRepId.toString() === user._id.toString()) return false;
 
     if (quotation.status !== 'PENDING_APPROVAL') return false;
 
-    const currentStep = quotation.requiredApprovalSteps?.find((s: ApprovalStep) => s.status === 'PENDING');
+    const steps = (quotation.requiredApprovalSteps || []).map((s: any) =>
+        typeof s === 'string' ? { role: s, status: 'PENDING' } : s
+    );
+    const currentStep = steps.find((s: ApprovalStep) => s.status === 'PENDING');
     if (!currentStep) return false;
 
     return currentStep.role === user.role;
@@ -31,7 +34,9 @@ export const advance = (
         throw new Error('User cannot act on this quotation at this time.');
     }
 
-    const steps = [...quotation.requiredApprovalSteps];
+    const steps: ApprovalStep[] = (quotation.requiredApprovalSteps || []).map((s: any) =>
+        typeof s === 'string' ? { role: s, status: 'PENDING' } : { ...s }
+    );
     const stepIndex = steps.findIndex((s: ApprovalStep) => s.status === 'PENDING');
 
     if (stepIndex === -1) throw new Error('No pending steps found.');

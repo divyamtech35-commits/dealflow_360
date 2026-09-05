@@ -207,12 +207,12 @@ export const SubscriptionDetail = () => {
                         </div>
                         <div>
                             <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1.5">Unit Price</p>
-                            <p className="font-bold text-slate-900">₹{sub.unitPrice.toLocaleString()}</p>
+                            <p className="font-bold text-slate-900">${sub.unitPrice.toLocaleString()}</p>
                             <p className="text-xs text-slate-400 mt-0.5">per unit</p>
                         </div>
                         <div>
                             <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1.5">MRR</p>
-                            <p className="font-bold text-blue-700 text-xl">₹{sub.totalRecurringAmount.toLocaleString()}</p>
+                            <p className="font-bold text-blue-700 text-xl">${sub.totalRecurringAmount.toLocaleString()}</p>
                             <p className="text-xs text-slate-400 mt-0.5">recurring</p>
                         </div>
                         <div>
@@ -283,7 +283,7 @@ export const SubscriptionDetail = () => {
                                                     </p>
                                                 </td>
                                                 <td className="px-6 py-3 text-slate-700">{sch.quantity}</td>
-                                                <td className="px-6 py-3 text-right font-bold text-slate-900">₹{sch.total.toLocaleString()}</td>
+                                                <td className="px-6 py-3 text-right font-bold text-slate-900">${sch.total.toLocaleString()}</td>
                                                 <td className="px-6 py-3 text-right">
                                                     {sub.status === 'ACTIVE' && (
                                                         <button
@@ -330,7 +330,7 @@ export const SubscriptionDetail = () => {
                                                         {' – '}
                                                         {new Date(sch.periodEnd).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                                     </td>
-                                                    <td className="px-6 py-3 text-right font-bold text-slate-900 text-sm">₹{sch.total.toLocaleString()}</td>
+                                                    <td className="px-6 py-3 text-right font-bold text-slate-900 text-sm">${sch.total.toLocaleString()}</td>
                                                     <td className="px-6 py-3 text-right">
                                                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_STYLES[sch.status] || STATUS_STYLES.VOID}`}>
                                                             {sch.status}
@@ -447,11 +447,11 @@ export const SubscriptionDetail = () => {
                             </div>
                             <div>
                                 <p className="text-xs text-slate-400 font-medium mb-1">Unit Price</p>
-                                <p className="font-bold text-slate-900">₹{data.subscription.unitPrice.toLocaleString()}</p>
+                                <p className="font-bold text-slate-900">${data.subscription.unitPrice.toLocaleString()}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-slate-400 font-medium mb-1">Current MRR</p>
-                                <p className="font-bold text-blue-700">₹{data.subscription.totalRecurringAmount.toLocaleString()}</p>
+                                <p className="font-bold text-blue-700">${data.subscription.totalRecurringAmount.toLocaleString()}</p>
                             </div>
                         </div>
 
@@ -469,7 +469,7 @@ export const SubscriptionDetail = () => {
                         {/* New MRR Preview */}
                         {newQuantity !== data.subscription.quantity && (
                             <div className="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm">
-                                <p className="text-blue-800 font-semibold">New MRR: ₹{(newQuantity * data.subscription.unitPrice).toLocaleString()}</p>
+                                <p className="text-blue-800 font-semibold">New MRR: ${(newQuantity * data.subscription.unitPrice).toLocaleString()}</p>
                             </div>
                         )}
 
@@ -499,11 +499,11 @@ export const SubscriptionDetail = () => {
                                     </div>
                                     <div>
                                         <p className="text-slate-500 mb-1">Old Period Value</p>
-                                        <p className="font-bold text-slate-800">₹{prorationPreview.oldPeriodValue.toLocaleString()}</p>
+                                        <p className="font-bold text-slate-800">${prorationPreview.oldPeriodValue.toLocaleString()}</p>
                                     </div>
                                     <div>
                                         <p className="text-slate-500 mb-1">New Period Value</p>
-                                        <p className="font-bold text-slate-800">₹{prorationPreview.newPeriodValue.toLocaleString()}</p>
+                                        <p className="font-bold text-slate-800">${prorationPreview.newPeriodValue.toLocaleString()}</p>
                                     </div>
                                 </div>
                                 <div className={`mt-3 pt-3 border-t ${prorationPreview.adjustmentAmount > 0 ? 'border-amber-200' : 'border-purple-200'}`}>
@@ -512,7 +512,7 @@ export const SubscriptionDetail = () => {
                                             {prorationPreview.adjustmentAmount > 0 ? 'Amount to Invoice:' : 'Credit to Issue:'}
                                         </p>
                                         <p className={`text-base font-black ${prorationPreview.adjustmentAmount > 0 ? 'text-amber-700' : 'text-purple-700'}`}>
-                                            ₹{Math.abs(prorationPreview.adjustmentAmount).toLocaleString()}
+                                            ${Math.abs(prorationPreview.adjustmentAmount).toLocaleString()}
                                         </p>
                                     </div>
                                 </div>
@@ -550,7 +550,7 @@ export const SubscriptionDetail = () => {
                         </div>
                         {/* Amount */}
                         <div className="mb-4">
-                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Payment Amount (₹)</label>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Payment Amount ($)</label>
                             <input
                                 type="number" min="1"
                                 value={payAmount}
@@ -630,9 +630,9 @@ const InvoiceSection = ({ title, icon, iconBg, invoices, onPay, onPrint }: {
                                 )}
                             </div>
                             <div className="text-right shrink-0">
-                                <p className="font-bold text-slate-900 text-sm">₹{inv.grandTotal.toLocaleString()}</p>
+                                <p className="font-bold text-slate-900 text-sm">${inv.grandTotal.toLocaleString()}</p>
                                 {inv.amountDue > 0 && (
-                                    <p className="text-xs text-red-600 font-medium">Due: ₹{inv.amountDue.toLocaleString()}</p>
+                                    <p className="text-xs text-red-600 font-medium">Due: ${inv.amountDue.toLocaleString()}</p>
                                 )}
                             </div>
                         </div>
@@ -757,12 +757,12 @@ const InvoicePrintModal = ({ data, onClose }: { data: any; onClose: () => void }
                         {/* Totals */}
                         <div className="flex justify-end border-t border-slate-200 pt-5">
                             <div className="w-72 space-y-2">
-                                <Row label="Subtotal" value={`₹${invoice.subtotal.toLocaleString()}`} />
-                                <Row label="Tax (10%)" value={`₹${invoice.taxTotal.toLocaleString()}`} />
-                                <Row label="Amount Paid" value={`–₹${invoice.amountPaid.toLocaleString()}`} valueClass="text-emerald-600" />
+                                <Row label="Subtotal" value={`$${invoice.subtotal.toLocaleString()}`} />
+                                <Row label="Tax (10%)" value={`$${invoice.taxTotal.toLocaleString()}`} />
+                                <Row label="Amount Paid" value={`–$${invoice.amountPaid.toLocaleString()}`} valueClass="text-emerald-600" />
                                 <div className="flex justify-between items-center border-t border-slate-200 pt-2">
                                     <span className="font-bold text-slate-900">Balance Due</span>
-                                    <span className="font-black text-xl text-red-600">₹{invoice.amountDue.toLocaleString()}</span>
+                                    <span className="font-black text-xl text-red-600">${invoice.amountDue.toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
@@ -782,7 +782,7 @@ const InvoicePrintModal = ({ data, onClose }: { data: any; onClose: () => void }
                                                 <td className="py-2 text-slate-700">{new Date(p.paidAt).toLocaleDateString('en-IN')}</td>
                                                 <td className="py-2 text-slate-700">{p.paymentMethod}</td>
                                                 <td className="py-2 font-mono text-xs text-slate-400">{p.paymentReference}</td>
-                                                <td className="py-2 text-right font-semibold text-emerald-700">₹{p.amount.toLocaleString()}</td>
+                                                <td className="py-2 text-right font-semibold text-emerald-700">${p.amount.toLocaleString()}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -824,8 +824,8 @@ const LineSection = ({ title, accent, lines, showPeriod }: { title: string; acce
                             </td>
                         )}
                         <td className="py-3 text-right text-slate-700">{line.quantity}</td>
-                        <td className="py-3 text-right text-slate-700">₹{line.unitPrice.toLocaleString()}</td>
-                        <td className="py-3 text-right font-bold text-slate-900">₹{line.lineTotal.toLocaleString()}</td>
+                        <td className="py-3 text-right text-slate-700">${line.unitPrice.toLocaleString()}</td>
+                        <td className="py-3 text-right font-bold text-slate-900">${line.lineTotal.toLocaleString()}</td>
                     </tr>
                 ))}
             </tbody>

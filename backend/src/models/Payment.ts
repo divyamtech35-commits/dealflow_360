@@ -17,7 +17,7 @@ const PaymentSchema = new Schema({
     invoiceId: { type: Schema.Types.ObjectId, ref: 'Invoice', required: true },
     customerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     amount: { type: Number, required: true },
-    currency: { type: String, required: true, default: 'INR' },
+    currency: { type: String, required: true, default: 'USD' },
     paymentMethod: { type: String, required: true },
     paymentReference: { type: String, required: true },
     status: { type: String, enum: ['PENDING', 'SUCCESS', 'FAILED', 'REFUNDED'], required: true, default: 'PENDING' },

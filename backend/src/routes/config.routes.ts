@@ -22,7 +22,11 @@ import {
     getPlans,
     createPlan,
     updatePlan,
-    deletePlan
+    deletePlan,
+    getInventory,
+    createOrUpdateStock,
+    updateStockById,
+    deleteStock
 } from '../controllers/config.controller';
 
 const router = Router();
@@ -63,5 +67,11 @@ router.get('/plans', getPlans);
 router.post('/plans', createPlan);
 router.put('/plans/:id', updatePlan);
 router.delete('/plans/:id', deletePlan);
+
+// Inventory & Stock
+router.get('/inventory', getInventory);
+router.post('/inventory', createOrUpdateStock);
+router.put('/inventory/:id', updateStockById);
+router.delete('/inventory/:id', deleteStock);
 
 export default router;

@@ -112,39 +112,221 @@ router.get('/credit-notes', async (req: Request, res: Response, next: NextFuncti
     } catch (e) { next(e); }
 });
 
+router.post('/credit-notes', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { customerId, invoiceId, amount, reason } = req.body;
+        const count = await CreditNote.countDocuments();
+        const creditNoteNumber = `CN-${String(count + 1).padStart(4, '0')}`;
+
+        const note = await CreditNote.create({
+            creditNoteNumber,
+            customerId,
+            invoiceId: invoiceId || undefined,
+            amount: Number(amount) || 0,
+            reason: reason || 'Commercial Adjustment / Credit Issue',
+            status: 'ISSUED'
+        });
+        const populated = await CreditNote.findById(note._id).populate('customerId', 'name email');
+        res.status(201).json(populated);
+    } catch (e) { next(e); }
+});
+
+router.delete('/credit-notes/:id', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        await CreditNote.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Credit note deleted successfully' });
+    } catch (e) { next(e); }
+});
+
 router.get('/reconciliation', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const invoices = await Invoice.find().populate('customerId', 'name email').sort({ createdAt: -1 });
+        const invoices = await Invoice.find()
+            .populate('customerId', 'name email')
+            .populate('orderId', 'orderNumber status')
+            .sort({ createdAt: -1 });
         res.json(invoices);
     } catch (e) { next(e); }
 });
 
+router.post('/invoices', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { customerId, orderId, invoiceType, lines, subtotal, taxTotal, grandTotal, dueDate, status } = req.body;
+        const count = await Invoice.countDocuments();
+        const invoiceNumber = `INV-${String(count + 1).padStart(5, '0')}`;
+
+        const sub = Number(subtotal) || (lines || []).reduce((acc: number, l: any) => acc + (Number(l.lineTotal) || 0), 0);
+        const tax = taxTotal !== undefined ? Number(taxTotal) : Math.round(sub * 0.1);
+        const grand = grandTotal !== undefined ? Number(grandTotal) : (sub + tax);
+        const invStatus = status || 'UNPAID';
+        const isPaid = invStatus === 'PAID';
+
+        const processedLines = (lines && lines.length > 0)
+            ? lines.map((l: any) => ({
+                productId: (l.productId && require('mongoose').Types.ObjectId.isValid(l.productId)) ? l.productId : new (require('mongoose').Types.ObjectId)(),
+                productName: l.productName || 'Professional Services',
+                description: l.description || '',
+                quantity: Number(l.quantity) || 1,
+                unitPrice: Number(l.unitPrice) || 0,
+                lineTotal: (Number(l.quantity) || 1) * (Number(l.unitPrice) || 0),
+                isRecurring: Boolean(l.isRecurring)
+            }))
+            : [{
+                productId: new (require('mongoose').Types.ObjectId)(),
+                productName: 'Professional Services / Cloud Sub',
+                description: 'Direct Billing Invoice',
+                quantity: 1,
+                unitPrice: sub,
+                lineTotal: sub,
+                isRecurring: invoiceType === 'RECURRING'
+            }];
+
+        const inv = await Invoice.create({
+            invoiceNumber,
+            customerId,
+            orderId: orderId || undefined,
+            invoiceType: invoiceType || 'ONE_TIME',
+            lines: processedLines,
+            subtotal: sub,
+            taxTotal: tax,
+            grandTotal: grand,
+            amountPaid: isPaid ? grand : 0,
+            amountDue: isPaid ? 0 : grand,
+            status: invStatus,
+            dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
+        });
+
+        const populated = await Invoice.findById(inv._id).populate('customerId', 'name email').populate('orderId', 'orderNumber');
+        res.status(201).json(populated);
+    } catch (e) { next(e); }
+});
+
+router.put('/invoices/:id', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { status, amountPaid, dueDate } = req.body;
+        const inv: any = await Invoice.findById(req.params.id);
+        if (!inv) return res.status(404).json({ error: 'Invoice not found' });
+
+        if (status) inv.status = status;
+        if (amountPaid !== undefined) {
+            inv.amountPaid = Number(amountPaid);
+            inv.amountDue = Math.max(0, inv.grandTotal - inv.amountPaid);
+            if (inv.amountDue === 0) inv.status = 'PAID';
+            else if (inv.amountPaid > 0) inv.status = 'PARTIALLY_PAID';
+        }
+        if (dueDate) inv.dueDate = new Date(dueDate);
+
+        await inv.save();
+        const populated = await Invoice.findById(inv._id).populate('customerId', 'name email').populate('orderId', 'orderNumber');
+        res.json(populated);
+    } catch (e) { next(e); }
+});
+
+router.delete('/invoices/:id', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        await Invoice.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Invoice deleted successfully' });
+    } catch (e) { next(e); }
+});
+
+// Dynamic summary calculation from real MongoDB collections
 router.get('/summary', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const activeSubs = await Subscription.countDocuments({ status: 'ACTIVE' });
+        const activeSubs = await Subscription.find({ status: 'ACTIVE' });
         
+        // Calculate dynamic MRR: Monthly Recurring Revenue across all ACTIVE subscriptions
+        const dynamicMRR = activeSubs.reduce((acc, s) => {
+            const qty = s.quantity || 1;
+            const price = s.unitPrice || 0;
+            const total = s.totalRecurringAmount || (qty * price);
+            if (s.billingCycle === 'YEARLY') return acc + Math.round(total / 12);
+            if (s.billingCycle === 'QUARTERLY') return acc + Math.round(total / 3);
+            return acc + total;
+        }, 0);
+
         const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-        const schedulesThisMonth = await BillingSchedule.find({
-            periodStart: { $gte: startOfMonth, $lte: endOfMonth }
+        const pendingInvoices = await Invoice.countDocuments({ status: { $in: ['UNPAID', 'DRAFT', 'PARTIALLY_PAID'] } });
+        const overdueInvoices = await Invoice.countDocuments({
+            $or: [
+                { status: 'OVERDUE' },
+                { status: { $in: ['UNPAID', 'PARTIALLY_PAID'] }, dueDate: { $lt: now } }
+            ]
         });
-        const billingThisMonth = schedulesThisMonth.reduce((acc, sch) => acc + sch.total, 0);
-
-        const pendingInvoices = await Invoice.countDocuments({ status: 'UNPAID' });
-        const overdueInvoices = await Invoice.countDocuments({ status: 'OVERDUE' });
 
         const credits = await CreditNote.find({ status: 'ISSUED' });
-        const totalCredits = credits.reduce((acc, c) => acc + c.amount, 0);
+        const totalCredits = credits.reduce((acc, c) => acc + (c.amount || 0), 0);
 
         res.json({
-            activeSubscriptions: activeSubs,
-            billingThisMonth,
+            activeSubscriptions: activeSubs.length,
+            billingThisMonth: dynamicMRR,
             pendingInvoices,
             overdueInvoices,
             totalCredits
         });
+    } catch (e) { next(e); }
+});
+
+// CREATE Subscription directly
+router.post('/subscriptions', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { customerId, productId, productName, billingCycle, unitPrice, quantity, startDate, status } = req.body;
+        const start = startDate ? new Date(startDate) : new Date();
+        const cycle = (billingCycle || 'MONTHLY').toUpperCase() as 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+        const nextBilling = new Date(start);
+        if (cycle === 'MONTHLY') nextBilling.setMonth(nextBilling.getMonth() + 1);
+        else if (cycle === 'QUARTERLY') nextBilling.setMonth(nextBilling.getMonth() + 3);
+        else nextBilling.setFullYear(nextBilling.getFullYear() + 1);
+
+        const qty = Number(quantity) || 1;
+        const price = Number(unitPrice) || 50;
+
+        const sub = await Subscription.create({
+            customerId,
+            productId: productId || new (require('mongoose').Types.ObjectId)(),
+            productName: productName || 'Cloud Storage 1TB',
+            billingCycle: cycle,
+            status: status || 'ACTIVE',
+            startDate: start,
+            nextBillingDate: nextBilling,
+            unitPrice: price,
+            quantity: qty,
+            totalRecurringAmount: qty * price
+        });
+
+        const periods = cycle === 'MONTHLY' ? 12 : cycle === 'QUARTERLY' ? 4 : 1;
+        await SubscriptionService.generateSchedules(sub._id as any, nextBilling, periods);
+
+        const populated = await Subscription.findById(sub._id).populate('customerId', 'name email company');
+        res.status(201).json(populated);
+    } catch (e) { next(e); }
+});
+
+// UPDATE Subscription
+router.put('/subscriptions/:id', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { status, unitPrice, quantity, billingCycle, nextBillingDate, productName } = req.body;
+        const sub: any = await Subscription.findById(req.params.id);
+        if (!sub) return res.status(404).json({ error: 'Subscription not found' });
+
+        if (status) sub.status = status;
+        if (productName) sub.productName = productName;
+        if (billingCycle) sub.billingCycle = billingCycle.toUpperCase();
+        if (unitPrice !== undefined) sub.unitPrice = Number(unitPrice);
+        if (quantity !== undefined) sub.quantity = Number(quantity);
+        sub.totalRecurringAmount = sub.unitPrice * sub.quantity;
+        if (nextBillingDate) sub.nextBillingDate = new Date(nextBillingDate);
+
+        await sub.save();
+        const populated = await Subscription.findById(sub._id).populate('customerId', 'name email company');
+        res.json(populated);
+    } catch (e) { next(e); }
+});
+
+// DELETE Subscription
+router.delete('/subscriptions/:id', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        await Subscription.findByIdAndDelete(req.params.id);
+        await BillingSchedule.deleteMany({ subscriptionId: req.params.id });
+        res.json({ message: 'Subscription and related schedules deleted' });
     } catch (e) { next(e); }
 });
 

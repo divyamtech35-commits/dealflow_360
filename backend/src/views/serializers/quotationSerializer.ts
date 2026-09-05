@@ -24,7 +24,9 @@ export const serializeQuotation = (q: any, lines?: any[]) => {
         marginPct: q.marginPct || 0,
         orderDiscountPercent: q.orderDiscountPercent,
         riskScore: q.riskScore || 0,
-        requiredApprovalSteps: q.requiredApprovalSteps || [],
+        requiredApprovalSteps: (q.requiredApprovalSteps || []).map((s: any) =>
+            typeof s === 'string' ? { role: s, status: 'PENDING' } : s
+        ),
         lastActivityAt: q.lastActivityAt
     };
 

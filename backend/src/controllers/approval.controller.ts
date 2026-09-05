@@ -4,6 +4,7 @@ import { resolveApprovalSteps, initApprovalSteps, advance } from '../services/ap
 import { logAudit } from '../services/auditService';
 import { serializeQuotation } from '../views/serializers/quotationSerializer';
 import { QuotationLine } from '../models/QuotationLine';
+import { Negotiation } from '../models/Negotiation';
 
 const getQuoteAndLines = async (id: string) => {
     const q = await Quotation.findById(id).populate('customerId', 'name tier _id');
@@ -64,6 +65,44 @@ export const handleApprovalAction = (action: 'APPROVE' | 'REJECT' | 'RETURN') =>
                 actor: { id: req.user._id, name: req.user.name, role: req.user.role, type: 'internal' }
             });
 
+            // Synchronize Customer Portal Negotiations
+            if (action === 'APPROVE') {
+                await Negotiation.updateMany(
+                    { quotationId: q._id, status: 'OPEN' },
+                    { status: 'ACCEPTED', resolvedAt: new Date() }
+                );
+                await Negotiation.create({
+                    quotationId: q._id,
+                    type: 'COMMENT',
+                    actorType: 'REP',
+                    actorId: req.user._id,
+                    message: `Counter offer ACCEPTED by ${req.user.role.replace('_', ' ')} (${req.user.name}): ${reason || 'Approved requested terms.'}`,
+                    status: 'ACCEPTED'
+                });
+            } else if (action === 'REJECT') {
+                await Negotiation.updateMany(
+                    { quotationId: q._id, status: 'OPEN' },
+                    { status: 'REJECTED', resolvedAt: new Date() }
+                );
+                await Negotiation.create({
+                    quotationId: q._id,
+                    type: 'COMMENT',
+                    actorType: 'REP',
+                    actorId: req.user._id,
+                    message: `Counter offer DECLINED by ${req.user.role.replace('_', ' ')} (${req.user.name}): ${reason || 'Proposed terms declined.'}`,
+                    status: 'REJECTED'
+                });
+            } else if (action === 'RETURN') {
+                await Negotiation.create({
+                    quotationId: q._id,
+                    type: 'COMMENT',
+                    actorType: 'REP',
+                    actorId: req.user._id,
+                    message: `Quotation returned for revision by ${req.user.role.replace('_', ' ')} (${req.user.name}): ${reason || 'Returned.'}`,
+                    status: 'RESOLVED'
+                });
+            }
+
             q.requiredApprovalSteps = steps;
             q.markModified('requiredApprovalSteps');
             q.status = nextStatus;
@@ -93,7 +132,10 @@ export const getApprovalQueue = async (req: Request, res: Response, next: NextFu
         const quotes = await Quotation.find({ status: 'PENDING_APPROVAL' }).populate('customerId', 'name').sort({ lastActivityAt: 1 });
         // Filter quotes where the CURRENT pending step matches req.user.role
         const filtered = quotes.filter(q => {
-            const step = (q.requiredApprovalSteps || []).find((s: any) => s.status === 'PENDING');
+            const steps = (q.requiredApprovalSteps || []).map((s: any) =>
+                typeof s === 'string' ? { role: s, status: 'PENDING' } : s
+            );
+            const step = steps.find((s: any) => s.status === 'PENDING');
             return step && step.role === req.user.role;
         });
         // Serialize

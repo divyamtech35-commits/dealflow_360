@@ -15,6 +15,8 @@ export const serializePortalQuotation = (quotation: any) => {
         currency: quotation.currency,
         notes: quotation.notes,
         validUntil: quotation.validUntil,
+        maxDiscountPercent: quotation.maxDiscountPercent || 15,
+        customerTierSnapshot: quotation.customerTierSnapshot,
         createdAt: quotation.createdAt,
         updatedAt: quotation.updatedAt,
 

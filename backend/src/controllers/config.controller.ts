@@ -5,6 +5,7 @@ import { User } from '../models/User';
 import { CustomerTier } from '../models/CustomerTier';
 import { DiscountRule } from '../models/DiscountRule';
 import { Warehouse } from '../models/Warehouse';
+import { Stock } from '../models/Stock';
 import { SubscriptionPlan } from '../models/SubscriptionPlan';
 import { resolveUnitPrice } from '../services/pricingEngine';
 
@@ -99,7 +100,11 @@ export const createCustomer = async (req: Request, res: Response, next: NextFunc
 
 export const updateCustomer = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customer = await User.findByIdAndUpdate(req.params.id, req.body, { new: true }).select('-passwordHash').populate('tier');
+        const updateData: any = { ...req.body };
+        if (req.body.tierId) {
+            updateData.tier = req.body.tierId;
+        }
+        const customer = await User.findByIdAndUpdate(req.params.id, updateData, { new: true }).select('-passwordHash').populate('tier');
         if (!customer) { res.status(404).json({ error: 'Customer not found' }); return; }
         res.json(customer);
     } catch (error) { next(error); }
@@ -171,6 +176,15 @@ export const getWarehouses = async (req: Request, res: Response, next: NextFunct
 export const createWarehouse = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const warehouse = await Warehouse.create(req.body);
+        // Automatically initialize stock records for existing products
+        const products = await Product.find();
+        for (const p of products) {
+            await Stock.findOneAndUpdate(
+                { warehouseId: warehouse._id, productId: p._id },
+                { $setOnInsert: { quantity: 100, reservedQuantity: 0, reorderLevel: 15 } },
+                { upsert: true, new: true }
+            );
+        }
         res.status(201).json(warehouse);
     } catch (error) { next(error); }
 };
@@ -186,7 +200,8 @@ export const updateWarehouse = async (req: Request, res: Response, next: NextFun
 export const deleteWarehouse = async (req: Request, res: Response, next: NextFunction) => {
     try {
         await Warehouse.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Warehouse deleted successfully' });
+        await Stock.deleteMany({ warehouseId: req.params.id });
+        res.json({ message: 'Warehouse and associated stock records deleted successfully' });
     } catch (error) { next(error); }
 };
 
@@ -218,5 +233,79 @@ export const deletePlan = async (req: Request, res: Response, next: NextFunction
     try {
         await SubscriptionPlan.findByIdAndDelete(req.params.id);
         res.json({ message: 'Subscription plan deleted successfully' });
+    } catch (error) { next(error); }
+};
+
+
+// --- INVENTORY & STOCK CRUD ---
+export const getInventory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { warehouseId, productId } = req.query;
+        let filter: any = {};
+        if (warehouseId) filter.warehouseId = warehouseId;
+        if (productId) filter.productId = productId;
+
+        const stocks = await Stock.find(filter)
+            .populate('warehouseId', 'name code address shippingCostWeight isActive')
+            .populate('productId', 'name sku category basePrice costPrice isActive')
+            .sort({ createdAt: -1 });
+
+        res.json(stocks);
+    } catch (error) { next(error); }
+};
+
+export const createOrUpdateStock = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { warehouseId, productId, quantity, reservedQuantity, reorderLevel } = req.body;
+        if (!warehouseId || !productId) {
+            res.status(400).json({ error: 'Warehouse ID and Product ID are required' });
+            return;
+        }
+
+        const updatedStock = await Stock.findOneAndUpdate(
+            { warehouseId, productId },
+            {
+                $set: {
+                    quantity: Number(quantity) || 0,
+                    reservedQuantity: Number(reservedQuantity) || 0,
+                    reorderLevel: Number(reorderLevel) || 0
+                }
+            },
+            { upsert: true, new: true, runValidators: true }
+        ).populate('warehouseId', 'name code address shippingCostWeight isActive')
+         .populate('productId', 'name sku category basePrice costPrice isActive');
+
+        res.status(201).json(updatedStock);
+    } catch (error) { next(error); }
+};
+
+export const updateStockById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { quantity, reservedQuantity, reorderLevel } = req.body;
+        const stock = await Stock.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: {
+                    ...(quantity !== undefined && { quantity: Number(quantity) }),
+                    ...(reservedQuantity !== undefined && { reservedQuantity: Number(reservedQuantity) }),
+                    ...(reorderLevel !== undefined && { reorderLevel: Number(reorderLevel) })
+                }
+            },
+            { new: true }
+        ).populate('warehouseId', 'name code address shippingCostWeight isActive')
+         .populate('productId', 'name sku category basePrice costPrice isActive');
+
+        if (!stock) {
+            res.status(404).json({ error: 'Stock record not found' });
+            return;
+        }
+        res.json(stock);
+    } catch (error) { next(error); }
+};
+
+export const deleteStock = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        await Stock.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Stock record deleted successfully' });
     } catch (error) { next(error); }
 };

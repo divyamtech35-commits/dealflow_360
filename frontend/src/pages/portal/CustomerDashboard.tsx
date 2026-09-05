@@ -54,8 +54,16 @@ export default function CustomerDashboard() {
                                     </div>
                                     <div className="text-right">
                                         <div className="font-bold text-indigo-700">{q.currency} {q.totalAmount.toLocaleString()}</div>
-                                        <div className={`mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded inline-block ${q.status === 'UNDER_NEGOTIATION' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                                            {q.status}
+                                        <div className={`mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded inline-block ${
+                                            q.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-700' :
+                                            q.status === 'UNDER_NEGOTIATION' ? 'bg-amber-100 text-amber-700' :
+                                            q.status === 'PENDING_APPROVAL' ? 'bg-purple-100 text-purple-700' :
+                                            'bg-blue-100 text-blue-700'
+                                        }`}>
+                                            {q.status === 'CONFIRMED' ? 'Confirmed' :
+                                             q.status === 'UNDER_NEGOTIATION' ? 'Under Negotiation' :
+                                             q.status === 'PENDING_APPROVAL' ? 'Under Review' :
+                                             'Sent'}
                                         </div>
                                     </div>
                                 </div>

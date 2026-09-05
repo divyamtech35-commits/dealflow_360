@@ -34,7 +34,7 @@ export interface IInvoice extends Document {
 }
 
 const InvoiceLineSchema = new Schema({
-    productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    productId: { type: Schema.Types.ObjectId, ref: 'Product', required: false },
     productName: { type: String, required: true },
     description: { type: String, default: '' },
     quantity: { type: Number, required: true },
@@ -47,7 +47,7 @@ const InvoiceLineSchema = new Schema({
 
 const InvoiceSchema = new Schema({
     invoiceNumber: { type: String, required: true, unique: true },
-    orderId: { type: Schema.Types.ObjectId, ref: 'Order', required: true },
+    orderId: { type: Schema.Types.ObjectId, ref: 'Order', required: false },
     subscriptionId: { type: Schema.Types.ObjectId, ref: 'Subscription' },
     billingScheduleId: { type: Schema.Types.ObjectId, ref: 'BillingSchedule' },
     customerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -58,7 +58,7 @@ const InvoiceSchema = new Schema({
     grandTotal: { type: Number, required: true },
     amountPaid: { type: Number, required: true, default: 0 },
     amountDue: { type: Number, required: true },
-    currency: { type: String, required: true, default: 'INR' },
+    currency: { type: String, required: true, default: 'USD' },
     status: { type: String, enum: ['DRAFT', 'ISSUED', 'UNPAID', 'PARTIALLY_PAID', 'PAID', 'OVERDUE', 'VOID'], required: true, default: 'DRAFT' },
     dueDate: { type: Date, required: true },
     paidAt: { type: Date }

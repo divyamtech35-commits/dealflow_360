@@ -4,7 +4,7 @@ import client from '../../api/client';
 import {
     ArrowLeft, ShoppingCart, Repeat2, Package, FileText,
     Printer, CreditCard, CheckCircle2, AlertCircle, RefreshCw,
-    TrendingUp, Clock3, BadgeIndianRupee, Receipt
+    TrendingUp, Clock3, DollarSign, Receipt
 } from 'lucide-react';
 
 const STATUS_STYLES: Record<string, string> = {
@@ -138,10 +138,10 @@ export const OrderBillingView = () => {
                 {/* Billing Summary KPIs */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                        { label: 'Order Total', value: `₹${order.grandTotal.toLocaleString()}`, icon: BadgeIndianRupee, color: 'text-blue-600', bg: 'bg-blue-50' },
-                        { label: 'Total Billed', value: `₹${totalBilled.toLocaleString()}`, icon: Receipt, color: 'text-slate-600', bg: 'bg-slate-100' },
-                        { label: 'Total Paid', value: `₹${totalPaid.toLocaleString()}`, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                        { label: 'Balance Due', value: `₹${totalDue.toLocaleString()}`, icon: Clock3, color: totalDue > 0 ? 'text-red-600' : 'text-slate-400', bg: totalDue > 0 ? 'bg-red-50' : 'bg-slate-50' },
+                        { label: 'Order Total', value: `$${order.grandTotal.toLocaleString()}`, icon: DollarSign, color: 'text-blue-600', bg: 'bg-blue-50' },
+                        { label: 'Total Billed', value: `$${totalBilled.toLocaleString()}`, icon: Receipt, color: 'text-slate-600', bg: 'bg-slate-100' },
+                        { label: 'Total Paid', value: `$${totalPaid.toLocaleString()}`, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                        { label: 'Balance Due', value: `$${totalDue.toLocaleString()}`, icon: Clock3, color: totalDue > 0 ? 'text-red-600' : 'text-slate-400', bg: totalDue > 0 ? 'bg-red-50' : 'bg-slate-50' },
                     ].map(k => (
                         <div key={k.label} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
                             <div className={`w-8 h-8 ${k.bg} rounded-xl flex items-center justify-center mb-3`}>
@@ -189,8 +189,8 @@ export const OrderBillingView = () => {
                                                 <span className="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">One-Time</span>
                                             </td>
                                             <td className="px-6 py-3 text-right text-slate-700">{l.quantity}</td>
-                                            <td className="px-6 py-3 text-right text-slate-700">₹{l.unitPrice.toLocaleString()}</td>
-                                            <td className="px-6 py-3 text-right font-bold text-slate-900">₹{l.lineTotal.toLocaleString()}</td>
+                                            <td className="px-6 py-3 text-right text-slate-700">${l.unitPrice.toLocaleString()}</td>
+                                            <td className="px-6 py-3 text-right font-bold text-slate-900">${l.lineTotal.toLocaleString()}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -198,7 +198,7 @@ export const OrderBillingView = () => {
                                     <tr>
                                         <td colSpan={3} className="px-6 py-3 text-sm font-bold text-slate-700 text-right">Subtotal (one-time)</td>
                                         <td className="px-6 py-3 text-right font-black text-slate-900">
-                                            ₹{(lines.oneTime || []).reduce((s: number, l: any) => s + l.lineTotal, 0).toLocaleString()}
+                                            ${(lines.oneTime || []).reduce((s: number, l: any) => s + l.lineTotal, 0).toLocaleString()}
                                         </td>
                                     </tr>
                                 </tfoot>
@@ -254,8 +254,8 @@ export const OrderBillingView = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-3 text-right text-slate-700">{l.quantity}</td>
-                                                <td className="px-6 py-3 text-right text-slate-700">₹{l.unitPrice.toLocaleString()}</td>
-                                                <td className="px-6 py-3 text-right font-bold text-blue-700">₹{l.lineTotal.toLocaleString()}</td>
+                                                <td className="px-6 py-3 text-right text-slate-700">${l.unitPrice.toLocaleString()}</td>
+                                                <td className="px-6 py-3 text-right font-bold text-blue-700">${l.lineTotal.toLocaleString()}</td>
                                             </tr>
                                         );
                                     })}
@@ -264,7 +264,7 @@ export const OrderBillingView = () => {
                                     <tr>
                                         <td colSpan={3} className="px-6 py-3 text-sm font-bold text-slate-700 text-right">Monthly Recurring Revenue</td>
                                         <td className="px-6 py-3 text-right font-black text-blue-700">
-                                            ₹{(lines.recurring || []).reduce((s: number, l: any) => s + l.lineTotal, 0).toLocaleString()}
+                                            ${(lines.recurring || []).reduce((s: number, l: any) => s + l.lineTotal, 0).toLocaleString()}
                                         </td>
                                     </tr>
                                 </tfoot>
@@ -370,7 +370,7 @@ export const OrderBillingView = () => {
                                                 {sub.billingCycle}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right font-bold text-blue-700">₹{sub.totalRecurringAmount.toLocaleString()}</td>
+                                        <td className="px-6 py-4 text-right font-bold text-blue-700">${sub.totalRecurringAmount.toLocaleString()}</td>
                                         <td className="px-6 py-4 text-right text-slate-700 text-sm">
                                             {sub.status === 'ACTIVE'
                                                 ? new Date(sub.nextBillingDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -411,7 +411,7 @@ export const OrderBillingView = () => {
                             </div>
                         </div>
                         <div className="mb-4">
-                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Amount (₹)</label>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Amount ($)</label>
                             <input type="number" min="1" value={payAmount} onChange={e => setPayAmount(e.target.value)}
                                 className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" />
                         </div>
@@ -485,9 +485,9 @@ const InvoiceCard = ({ title, subtitle, icon, iconBg, invoices, onPay, onPrint }
                                 </div>
                             ) : <span className="text-slate-400 text-xs">—</span>}
                         </td>
-                        <td className="px-6 py-3 text-right font-bold text-slate-900">₹{inv.grandTotal.toLocaleString()}</td>
-                        <td className="px-6 py-3 text-right font-semibold text-emerald-600">₹{inv.amountPaid.toLocaleString()}</td>
-                        <td className="px-6 py-3 text-right font-semibold text-red-600">₹{inv.amountDue.toLocaleString()}</td>
+                        <td className="px-6 py-3 text-right font-bold text-slate-900">${inv.grandTotal.toLocaleString()}</td>
+                        <td className="px-6 py-3 text-right font-semibold text-emerald-600">${inv.amountPaid.toLocaleString()}</td>
+                        <td className="px-6 py-3 text-right font-semibold text-red-600">${inv.amountDue.toLocaleString()}</td>
                         <td className="px-6 py-3 text-right">
                             <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold border ${
                                 inv.status === 'PAID' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
@@ -570,12 +570,12 @@ const InvoicePrintModal = ({ data, onClose }: { data: any; onClose: () => void }
                         {/* Totals */}
                         <div className="flex justify-end border-t border-slate-200 pt-5">
                             <div className="w-72 space-y-2">
-                                <TotalRow label="Subtotal" value={`₹${invoice.subtotal.toLocaleString()}`} />
-                                <TotalRow label="Tax (10%)" value={`₹${invoice.taxTotal.toLocaleString()}`} />
-                                <TotalRow label="Amount Paid" value={`–₹${invoice.amountPaid.toLocaleString()}`} valueClass="text-emerald-600" />
+                                <TotalRow label="Subtotal" value={`$${invoice.subtotal.toLocaleString()}`} />
+                                <TotalRow label="Tax (10%)" value={`$${invoice.taxTotal.toLocaleString()}`} />
+                                <TotalRow label="Amount Paid" value={`–$${invoice.amountPaid.toLocaleString()}`} valueClass="text-emerald-600" />
                                 <div className="flex justify-between border-t border-slate-200 pt-2">
                                     <span className="font-bold text-slate-900">Balance Due</span>
-                                    <span className="font-black text-xl text-red-600">₹{invoice.amountDue.toLocaleString()}</span>
+                                    <span className="font-black text-xl text-red-600">${invoice.amountDue.toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
@@ -589,7 +589,7 @@ const InvoicePrintModal = ({ data, onClose }: { data: any; onClose: () => void }
                                     </tr></thead>
                                     <tbody className="divide-y divide-slate-100">
                                         {payments.map((p: any, i: number) => (
-                                            <tr key={i}><td className="py-2 text-slate-700">{new Date(p.paidAt).toLocaleDateString('en-IN')}</td><td className="py-2 text-slate-700">{p.paymentMethod}</td><td className="py-2 font-mono text-xs text-slate-400">{p.paymentReference}</td><td className="py-2 text-right font-semibold text-emerald-700">₹{p.amount.toLocaleString()}</td></tr>
+                                            <tr key={i}><td className="py-2 text-slate-700">{new Date(p.paidAt).toLocaleDateString('en-IN')}</td><td className="py-2 text-slate-700">{p.paymentMethod}</td><td className="py-2 font-mono text-xs text-slate-400">{p.paymentReference}</td><td className="py-2 text-right font-semibold text-emerald-700">${p.amount.toLocaleString()}</td></tr>
                                         ))}
                                     </tbody>
                                 </table>
@@ -618,8 +618,8 @@ const LineTable = ({ title, accent, lines, showPeriod = false }: any) => (
                         <td className="py-3"><p className="font-semibold text-slate-800">{l.productName}</p>{l.description && <p className="text-xs text-slate-400">{l.description}</p>}</td>
                         {showPeriod && <td className="py-3 text-xs text-slate-500">{l.periodStart ? `${new Date(l.periodStart).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} – ${new Date(l.periodEnd).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}` : '—'}</td>}
                         <td className="py-3 text-right text-slate-700">{l.quantity}</td>
-                        <td className="py-3 text-right text-slate-700">₹{l.unitPrice.toLocaleString()}</td>
-                        <td className="py-3 text-right font-bold text-slate-900">₹{l.lineTotal.toLocaleString()}</td>
+                        <td className="py-3 text-right text-slate-700">${l.unitPrice.toLocaleString()}</td>
+                        <td className="py-3 text-right font-bold text-slate-900">${l.lineTotal.toLocaleString()}</td>
                     </tr>
                 ))}
             </tbody>

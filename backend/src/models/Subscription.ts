@@ -21,7 +21,7 @@ export interface ISubscription extends Document {
 
 const SubscriptionSchema = new Schema({
     customerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    orderId: { type: Schema.Types.ObjectId, ref: 'Order', required: true },
+    orderId: { type: Schema.Types.ObjectId, ref: 'Order', required: false },
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
     productName: { type: String, required: true },
     billingCycle: { type: String, enum: ['MONTHLY', 'QUARTERLY', 'YEARLY'], required: true },
