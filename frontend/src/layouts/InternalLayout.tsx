@@ -33,7 +33,7 @@ export default function InternalLayout() {
             items.push({ label: 'Master Data (Admin)', path: '/internal/admin' });
         }
 
-        if (role === 'CUSTOMER' || role === 'SALES_REP' || role === 'ADMIN' || role === 'SALES_MANAGER') {
+        if (role === 'CUSTOMER') {
             items.push({ label: 'Customer Portal', path: '/internal/customer' });
         }
 

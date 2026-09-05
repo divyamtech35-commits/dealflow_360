@@ -62,7 +62,7 @@ function App() {
               </Route>
 
               {/* Customer Portal (View Quote, Request Changes, Counter Discount, Confirm Quote) */}
-              <Route element={<ProtectedRoute allowedRoles={['CUSTOMER', 'SALES_REP', 'ADMIN', 'SALES_MANAGER']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['CUSTOMER']} />}>
                 <Route path="customer" element={<Navigate to="/internal/customer/quotes" replace />} />
                 <Route path="customer/quotes" element={<CustomerPortal tab="VIEW" />} />
                 <Route path="customer/quotes/:id" element={<CustomerPortal tab="VIEW" />} />
