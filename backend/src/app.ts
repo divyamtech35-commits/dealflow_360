@@ -7,6 +7,8 @@ import authRoutes from './routes/auth.routes';
 import configRoutes from './routes/config.routes';
 import quotationRoutes from './routes/quotation.routes';
 import approvalRoutes from './routes/approval.routes';
+import orderRoutes from './routes/order.routes';
+import billingRoutes from './routes/billing.routes';
 
 dotenv.config();
 connectDB();
@@ -20,6 +22,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/quotations', quotationRoutes);
 app.use('/api/approvals', approvalRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/billing', billingRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });

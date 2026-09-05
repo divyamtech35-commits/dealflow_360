@@ -10,6 +10,7 @@ import QuotationList from './pages/QuotationList';
 import QuotationBuilder from './pages/QuotationBuilder';
 import ApprovalQueue from './pages/ApprovalQueue';
 import ApprovalDetail from './pages/ApprovalDetail';
+import FulfillmentScreen from './pages/FulfillmentScreen';
 
 const DummyDashboard = () => <div className="text-white p-8 font-bold">Dashboard Section (Coming Soon)</div>;
 const DummyBackend = () => <div className="text-white p-8 font-bold">Admin Config Engine (Coming Soon)</div>;
@@ -33,6 +34,7 @@ function App() {
               <Route element={<ProtectedRoute allowedRoles={['SALES_MANAGER', 'FINANCE', 'ADMIN']} />}>
                 <Route path="approvals" element={<ApprovalQueue />} />
                 <Route path="approvals/:id" element={<ApprovalDetail />} />
+                <Route path="fulfillment" element={<FulfillmentScreen />} />
               </Route>
 
               <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>

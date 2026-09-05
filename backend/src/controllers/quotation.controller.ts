@@ -7,6 +7,8 @@ import { DiscountRule } from '../models/DiscountRule';
 import { recalculateQuotation } from '../services/quotationCalc';
 import { serializeQuotation } from '../views/serializers/quotationSerializer';
 import { resolveUnitPrice } from '../services/pricingEngine';
+import { rankSuggestions } from '../services/upsellEngine';
+import { UpsellRule } from '../models/UpsellRule';
 
 export const listQuotations = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -110,5 +112,19 @@ export const removeLine = async (req: Request, res: Response, next: NextFunction
         const finalQ = await recalculateQuotation(req.params.id);
         const lines = await QuotationLine.find({ quotationId: finalQ._id });
         res.json(serializeQuotation(finalQ, lines));
+    } catch (e) { next(e); }
+};
+
+export const getSuggestions = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const quote = await Quotation.findById(req.params.id);
+        if (!quote) return res.status(404).json({ error: 'Not found' });
+
+        const lines = await QuotationLine.find({ quotationId: quote._id });
+        const rules = await UpsellRule.find({ isActive: true });
+        const products = await Product.find({ isActive: true });
+
+        const suggestions = rankSuggestions(lines, rules, products, quote.orderDiscountPercent || 0);
+        res.json(suggestions);
     } catch (e) { next(e); }
 };

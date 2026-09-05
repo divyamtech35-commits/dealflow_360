@@ -45,13 +45,10 @@ const QuotationSchema: Schema = new Schema({
     notes: { type: String }
 }, { timestamps: true });
 
-QuotationSchema.pre('save', async function (next) {
+QuotationSchema.pre('save', async function () {
     if (this.isNew && !this.quotationNumber) {
-        try {
-            this.quotationNumber = await getNextSequence('quotation', 'QT');
-        } catch (err: any) { return next(err); }
+        this.quotationNumber = await getNextSequence('quotation', 'QT');
     }
-    next();
 });
 
 export const Quotation = mongoose.model<IQuotation>('Quotation', QuotationSchema);

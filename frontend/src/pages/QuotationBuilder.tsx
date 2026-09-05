@@ -9,6 +9,8 @@ export default function QuotationBuilder() {
     const [activeTab, setActiveTab] = useState('Hardware');
     const [search, setSearch] = useState('');
     const [showRiskModal, setShowRiskModal] = useState(false);
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
 
     const fetchQuote = async () => {
         try {
@@ -25,6 +27,12 @@ export default function QuotationBuilder() {
     };
 
     useEffect(() => { fetchQuote(); fetchProducts(); }, [id, search]);
+
+    useEffect(() => {
+        if (quote) {
+            client.get(`/quotations/${id}/suggestions`).then(res => setSuggestions(res.data)).catch(console.error);
+        }
+    }, [quote?.lines, id]);
 
     const addLine = async (p: any) => {
         const backup = { ...quote };
@@ -177,8 +185,40 @@ export default function QuotationBuilder() {
                 )}
             </div>
 
-            {/* RIGHT: Sticky Summary */}
-            <div className="w-1/4 bg-[#1A1A1A] border border-white/10 rounded-xl p-6 flex flex-col h-fit sticky top-0">
+            {/* RIGHT: Sticky Summary & Suggestions */}
+            <div className="w-1/4 bg-[#1A1A1A] border border-white/10 rounded-xl p-6 flex flex-col h-fit sticky top-0 overflow-y-auto max-h-screen">
+
+                {suggestions.filter(s => !dismissedSuggestions.has(s.product._id)).length > 0 && (
+                    <div className="mb-6 mb-8 border-b border-white/10 pb-6">
+                        <h3 className="text-[11px] uppercase tracking-wider font-bold text-amber-500 mb-4 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            Smart Suggestions
+                        </h3>
+                        <div className="space-y-3">
+                            {suggestions.filter(s => !dismissedSuggestions.has(s.product._id)).map(s => (
+                                <div key={s.product._id} className="p-3 bg-[#252525] border border-amber-500/20 rounded-lg text-sm transition-all hover:border-amber-500/50">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <div className="font-bold text-white leading-tight">{s.product.name}</div>
+                                            <div className="text-amber-500/80 text-[10px] uppercase font-bold mt-1">Why: {s.reason}</div>
+                                        </div>
+                                        {s.isPromoted && <span className="bg-blue-600 border border-blue-500 text-white text-[9px] uppercase px-1.5 py-0.5 rounded-sm font-bold">Promoted</span>}
+                                    </div>
+                                    <div className="flex items-center justify-between mt-3 text-xs">
+                                        <div className={`font-bold ${s.marginPercentDelta > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                            {s.marginPercentDelta > 0 ? '+' : ''}{s.marginPercentDelta.toFixed(2)}% margin
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setDismissedSuggestions(new Set([...dismissedSuggestions, s.product._id]))} className="text-slate-500 hover:text-white px-2 cursor-pointer transition-colors">✕</button>
+                                            <button onClick={() => addLine(s.product)} className="bg-white/10 hover:bg-emerald-600 text-emerald-400 hover:text-white font-bold px-3 py-1 rounded cursor-pointer transition-colors">Add</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <h3 className="text-lg font-bold text-white mb-6">Quote Summary</h3>
                 <div className="space-y-3 text-sm mb-6 pb-6 border-b border-white/10">
                     <div className="flex justify-between"><span className="text-slate-400">Subtotal</span><span className="text-white">{quote.subtotalFormatted}</span></div>

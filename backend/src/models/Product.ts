@@ -10,6 +10,7 @@ export interface IProduct extends Document {
     taxPercent: number;
     costPrice: number;
     isSubscription: boolean;
+    isPromoted: boolean;
     subscriptionPlanId?: mongoose.Types.ObjectId;
     isActive: boolean;
     createdAt: Date;
@@ -27,6 +28,7 @@ const ProductSchema: Schema = new Schema(
         taxPercent: { type: Number, required: true, default: 0 },
         costPrice: { type: Number, required: true },
         isSubscription: { type: Boolean, default: false },
+        isPromoted: { type: Boolean, default: false, index: true },
         subscriptionPlanId: { type: Schema.Types.ObjectId, ref: 'SubscriptionPlan' },
         isActive: { type: Boolean, default: true },
     },
