@@ -61,21 +61,23 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
     );
 
     // Dynamic discount rules from backend state
-    const displayRules = discountRules.length > 0 ? discountRules.map((r, idx) => ({
+    const displayRules = discountRules.map((r, idx) => ({
         id: r._id || idx,
         tier: r.customerTierId?.name || (r.maxDiscountPercent >= 25 ? 'Gold Account Tier' : r.maxDiscountPercent >= 15 ? 'Silver Account Tier' : 'Bronze Account Tier'),
         maxDiscount: `${r.maxDiscountPercent || 0}% Max`,
         managerEscalation: `Required if > ${r.approvalRequiredAbove || r.maxDiscountPercent || 0}%`,
         financeEscalation: `Required if > ${r.financeApprovalRequiredAbove || (r.maxDiscountPercent ? r.maxDiscountPercent + 10 : 25)}%`,
         status: r.isActive !== false ? 'ENFORCED' : 'INACTIVE'
-    })) : [
-        { id: 1, tier: 'Gold Account Tier', maxDiscount: '25.0% Max', managerEscalation: 'Required if > 25%', financeEscalation: 'Required if > 35%', status: 'ENFORCED' },
-        { id: 2, tier: 'Silver Account Tier', maxDiscount: '15.0% Max', managerEscalation: 'Required if > 15%', financeEscalation: 'Required if > 25%', status: 'ENFORCED' },
-        { id: 3, tier: 'Bronze Account Tier', maxDiscount: '8.0% Max', managerEscalation: 'Required if > 8%', financeEscalation: 'Required if > 18%', status: 'ENFORCED' },
-    ];
+    }));
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 pb-20">
+            {isLoading && (
+                <div className="p-8 text-center text-xs font-bold text-slate-500 bg-white rounded-3xl border border-slate-200">
+                    Loading configuration data from server...
+                </div>
+            )}
+
             {/* VIEW 1: PRODUCTS MASTER CATALOG */}
             {activeTab === 'PRODUCTS' && (
                 <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-6">
@@ -156,7 +158,7 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
                             </span>
                             <span className="text-xs text-slate-400">•</span>
                             <span className="text-xs font-semibold text-slate-500">
-                                3 Automated Tiers
+                                {discountRules.length} Automated Tiers Configured
                             </span>
                         </div>
                         <h2 className="text-2xl font-black text-slate-900 tracking-tight">Pricing Multipliers & Margin Rules</h2>
@@ -164,44 +166,25 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                        <div className="p-5 rounded-2xl border border-amber-200 bg-amber-50/30 space-y-2">
-                            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-800 border border-amber-200">
-                                Gold Tier Multiplier
-                            </span>
-                            <div className="text-3xl font-black text-slate-900">0.80x</div>
-                            <p className="text-xs text-slate-500">
-                                Standard 20% baseline customer discount multiplier automatically applied to all catalog lines.
-                            </p>
-                            <div className="text-[11px] font-semibold text-amber-700 pt-2 border-t border-amber-100">
-                                Max Discretionary Discount: 25%
-                            </div>
-                        </div>
-
-                        <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-2">
-                            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-200 text-slate-800 border border-slate-300">
-                                Silver Tier Multiplier
-                            </span>
-                            <div className="text-3xl font-black text-slate-900">0.90x</div>
-                            <p className="text-xs text-slate-500">
-                                Standard 10% baseline customer discount multiplier for mid-market recurring accounts.
-                            </p>
-                            <div className="text-[11px] font-semibold text-slate-700 pt-2 border-t border-slate-200">
-                                Max Discretionary Discount: 15%
-                            </div>
-                        </div>
-
-                        <div className="p-5 rounded-2xl border border-orange-200 bg-orange-50/30 space-y-2">
-                            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-orange-100 text-orange-800 border border-orange-200">
-                                Bronze Tier Multiplier
-                            </span>
-                            <div className="text-3xl font-black text-slate-900">1.00x</div>
-                            <p className="text-xs text-slate-500">
-                                Standard list MSRP base price book for standard enterprise client accounts.
-                            </p>
-                            <div className="text-[11px] font-semibold text-orange-800 pt-2 border-t border-orange-100">
-                                Max Discretionary Discount: 8%
-                            </div>
-                        </div>
+                        {discountRules.map((rule: any) => {
+                            const name = rule.customerTierId?.name || 'Customer Tier';
+                            const maxDisc = rule.maxDiscountPercent || 0;
+                            const mult = (1 - maxDisc / 100).toFixed(2);
+                            return (
+                                <div key={rule._id} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-2">
+                                    <span className="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-100 text-blue-800 border border-blue-200">
+                                        {name} Multiplier
+                                    </span>
+                                    <div className="text-3xl font-black text-slate-900">{mult}x</div>
+                                    <p className="text-xs text-slate-500">
+                                        Standard baseline customer tier pricing policy dynamically configured in backend.
+                                    </p>
+                                    <div className="text-[11px] font-semibold text-slate-700 pt-2 border-t border-slate-200">
+                                        Max Discretionary Discount: {maxDisc}%
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
 
                     <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-4">
@@ -287,7 +270,7 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
                             </span>
                             <span className="text-xs text-slate-400">•</span>
                             <span className="text-xs font-semibold text-slate-500">
-                                {warehouses.length || 3} Active Depots
+                                {warehouses.length} Active Depots
                             </span>
                         </div>
                         <h2 className="text-2xl font-black text-slate-900 tracking-tight">Regional Fulfillment Warehouses</h2>
@@ -295,12 +278,8 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                        {(warehouses.length > 0 ? warehouses : [
-                            { code: 'WH-MAIN', name: 'Main Headquarters Logistics', location: 'Austin, TX', capacity: '150,000 Units', priority: 1 },
-                            { code: 'WH-EAST', name: 'East Coast Distribution Depot', location: 'New York, NY', capacity: '95,000 Units', priority: 2 },
-                            { code: 'WH-WEST', name: 'West Coast Logistics Center', location: 'San Francisco, CA', capacity: '120,000 Units', priority: 3 }
-                        ]).map((w: any) => (
-                            <div key={w.code || w._id} className="p-5 rounded-2xl border border-slate-200/80 bg-slate-50/50 space-y-2">
+                        {warehouses.map((w: any) => (
+                            <div key={w._id || w.code} className="p-5 rounded-2xl border border-slate-200/80 bg-slate-50/50 space-y-2">
                                 <div className="flex items-center justify-between">
                                     <span className="font-mono text-xs font-bold text-blue-600">{w.code}</span>
                                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -308,10 +287,10 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
                                     </span>
                                 </div>
                                 <div className="font-bold text-sm text-slate-900">{w.name}</div>
-                                <div className="text-xs text-slate-500">{w.location || w.address?.city || 'United States'}</div>
+                                <div className="text-xs text-slate-500">{w.address || 'United States Headquarters'}</div>
                                 <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs font-semibold text-slate-700">
-                                    <span>Capacity:</span>
-                                    <span>{w.capacity || '100,000 Units'}</span>
+                                    <span>Shipping Weight Priority:</span>
+                                    <span>{w.shippingCostWeight || 1}</span>
                                 </div>
                             </div>
                         ))}
@@ -329,7 +308,7 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
                             </span>
                             <span className="text-xs text-slate-400">•</span>
                             <span className="text-xs font-semibold text-slate-500">
-                                {plans.length || 3} Active SLA Tiers
+                                {plans.length} Active SLA Tiers
                             </span>
                         </div>
                         <h2 className="text-2xl font-black text-slate-900 tracking-tight">Recurring Subscription Plans & SLAs</h2>
@@ -337,24 +316,20 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                        {(plans.length > 0 ? plans : [
-                            { name: 'Standard SaaS License', frequency: 'Monthly', fee: '$250/mo', sla: '99.5% Uptime' },
-                            { name: 'Pro Enterprise SLA Warranty', frequency: 'Monthly', fee: '$600/mo', sla: '99.9% Uptime' },
-                            { name: 'Mission-Critical VIP Coverage', frequency: 'Annual', fee: '$6,000/yr', sla: '99.99% Uptime' }
-                        ]).map((plan: any, i: number) => (
-                            <div key={i} className="p-5 rounded-2xl border border-slate-200/80 bg-slate-50/50 space-y-3">
+                        {plans.map((plan: any) => (
+                            <div key={plan._id || plan.name} className="p-5 rounded-2xl border border-slate-200/80 bg-slate-50/50 space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold uppercase text-purple-700">{plan.frequency || 'Monthly'}</span>
+                                    <span className="text-xs font-bold uppercase text-purple-700">{plan.billingCycle || 'MONTHLY'}</span>
                                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
                                         Recurring
                                     </span>
                                 </div>
                                 <div>
                                     <div className="font-bold text-base text-slate-900">{plan.name}</div>
-                                    <div className="text-2xl font-black text-slate-900 mt-1">{plan.fee || `$${plan.basePrice || 250}/mo`}</div>
+                                    <div className="text-2xl font-black text-slate-900 mt-1">${(plan.price || 0).toLocaleString()}</div>
                                 </div>
                                 <div className="text-xs text-slate-500 leading-relaxed pt-2 border-t border-slate-200/60">
-                                    SLA Target: <span className="font-bold text-slate-800">{plan.sla || '99.9% Uptime'}</span>
+                                    Proration: <span className="font-bold text-slate-800">{plan.prorationEnabled ? 'Enabled' : 'Disabled'}</span>
                                 </div>
                             </div>
                         ))}

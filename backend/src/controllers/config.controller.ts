@@ -48,7 +48,7 @@ export const getCustomers = async (req: Request, res: Response, next: NextFuncti
 
 export const getDiscountRules = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const rules = await DiscountRule.find();
+        const rules = await DiscountRule.find().populate('customerTierId');
         res.json(rules);
     } catch (error) { next(error); }
 };
