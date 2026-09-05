@@ -12,25 +12,32 @@ export default function InternalLayout() {
 
     const getNavItems = () => {
         const role = user?.role;
+
+        if (role === 'ADMIN') {
+            return [
+                { label: 'Products', path: '/internal/admin/products' },
+                { label: 'Price Lists', path: '/internal/admin/prices' },
+                { label: 'Discount Tiers', path: '/internal/admin/discount-rules' },
+                { label: 'Warehouses', path: '/internal/admin/warehouses' },
+                { label: 'Subscription Plans', path: '/internal/admin/subscription-plans' },
+            ];
+        }
+
         const items = [
             { label: 'Dashboard', path: '/internal/dashboard' },
         ];
 
-        if (role === 'SALES_REP' || role === 'ADMIN') {
+        if (role === 'SALES_REP') {
             items.push({ label: 'Quotations', path: '/internal/quotations' });
         }
 
-        if (role === 'SALES_MANAGER' || role === 'FINANCE' || role === 'ADMIN') {
+        if (role === 'SALES_MANAGER' || role === 'FINANCE') {
             items.push({ label: 'Approvals', path: '/internal/approvals' });
             items.push({ label: 'Fulfillment', path: '/internal/fulfillment' });
         }
 
-        if (role === 'FINANCE' || role === 'ADMIN') {
+        if (role === 'FINANCE') {
             items.push({ label: 'Subscription & Billing', path: '/internal/billing' });
-        }
-
-        if (role === 'ADMIN') {
-            items.push({ label: 'Master Data (Admin)', path: '/internal/admin' });
         }
 
         return items;
@@ -122,7 +129,7 @@ export default function InternalLayout() {
                 </nav>
 
                 {/* Sidebar Quick Action */}
-                {(user?.role === 'SALES_REP' || user?.role === 'ADMIN') && (
+                {user?.role === 'SALES_REP' && (
                     <div className="px-4 pb-4">
                         <button
                             onClick={handleCreateQuote}
