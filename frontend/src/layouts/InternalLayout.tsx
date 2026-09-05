@@ -30,7 +30,11 @@ export default function InternalLayout() {
         }
 
         if (role === 'ADMIN') {
-            items.push({ label: 'Backend Config', path: '/internal/backend' });
+            items.push({ label: 'Master Data (Admin)', path: '/internal/admin' });
+        }
+
+        if (role === 'CUSTOMER' || role === 'SALES_REP' || role === 'ADMIN' || role === 'SALES_MANAGER') {
+            items.push({ label: 'Customer Portal', path: '/internal/customer' });
         }
 
         return items;
@@ -75,7 +79,8 @@ export default function InternalLayout() {
         if (pathname.includes('/internal/fulfillment')) return 'Fulfillment & Stock Allocation';
         if (pathname.match(/\/internal\/quotations\/[^/]+/)) return 'Quotation Builder';
         if (pathname.includes('/internal/quotations')) return 'Quotations Pipeline';
-        if (pathname.includes('/internal/backend')) return 'System Configuration';
+        if (pathname.includes('/internal/backend') || pathname.includes('/internal/admin')) return 'System Configuration';
+        if (pathname.includes('/internal/customer')) return 'Customer Portal';
         return 'Sales Operations';
     };
 
