@@ -21,8 +21,8 @@ import { OrderBillingView } from './pages/billing/OrderBillingView';
 import CustomerDashboard from './pages/portal/CustomerDashboard';
 import PortalView from './pages/portal/PortalView';
 
-import AdminConfig from './pages/AdminConfig';
-import CustomerPortal from './pages/customer/CustomerPortal';
+const DummyBackend = () => <div className="text-white p-8 font-bold">Admin Config Engine (Coming Soon)</div>;
+
 function App() {
   return (
     <AuthProvider>
@@ -52,31 +52,17 @@ function App() {
               </Route>
 
               <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
-                <Route path="admin" element={<Navigate to="/internal/admin/products" replace />} />
-                <Route path="admin/products" element={<AdminConfig tab="PRODUCTS" />} />
-                <Route path="admin/prices" element={<AdminConfig tab="PRICES" />} />
-                <Route path="admin/discount-rules" element={<AdminConfig tab="DISCOUNTS" />} />
-                <Route path="admin/warehouses" element={<AdminConfig tab="WAREHOUSES" />} />
-                <Route path="admin/subscription-plans" element={<AdminConfig tab="PLANS" />} />
-                <Route path="backend" element={<Navigate to="/internal/admin/products" replace />} />
-              </Route>
-
-              {/* Customer Portal (View Quote, Request Changes, Counter Discount, Confirm Quote) */}
-              <Route element={<ProtectedRoute allowedRoles={['CUSTOMER']} />}>
-                <Route path="customer" element={<Navigate to="/internal/customer/quotes" replace />} />
-                <Route path="customer/quotes" element={<CustomerPortal tab="VIEW" />} />
-                <Route path="customer/quotes/:id" element={<CustomerPortal tab="VIEW" />} />
-                <Route path="customer/request-changes" element={<CustomerPortal tab="CHANGES" />} />
-                <Route path="customer/counter-discount" element={<CustomerPortal tab="COUNTER" />} />
-                <Route path="customer/confirm-quote" element={<CustomerPortal tab="CONFIRM" />} />
+                <Route path="backend" element={<DummyBackend />} />
               </Route>
             </Route>
           </Route>
 
-          {/* Legacy Customer Portal Redirects */}
-          <Route path="/portal" element={<Navigate to="/internal/customer/quotes" replace />} />
-          <Route path="/portal/quotes" element={<Navigate to="/internal/customer/quotes" replace />} />
-          <Route path="/portal/quotes/:id" element={<Navigate to="/internal/customer/quotes" replace />} />
+          <Route path="/portal" element={<ProtectedRoute allowedRoles={['CUSTOMER']} />}>
+            <Route element={<PortalLayout />}>
+              <Route path="dashboard" element={<CustomerDashboard />} />
+              <Route path="quotations/:id" element={<PortalView />} />
+            </Route>
+          </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
