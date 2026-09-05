@@ -21,7 +21,7 @@ import { OrderBillingView } from './pages/billing/OrderBillingView';
 import CustomerDashboard from './pages/portal/CustomerDashboard';
 import PortalView from './pages/portal/PortalView';
 
-const DummyBackend = () => <div className="text-white p-8 font-bold">Admin Config Engine (Coming Soon)</div>;
+import AdminConfig from './pages/AdminConfig';
 
 function App() {
   return (
@@ -52,7 +52,13 @@ function App() {
               </Route>
 
               <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
-                <Route path="backend" element={<DummyBackend />} />
+                <Route path="admin" element={<Navigate to="/internal/admin/products" replace />} />
+                <Route path="admin/products" element={<AdminConfig tab="PRODUCTS" />} />
+                <Route path="admin/prices" element={<AdminConfig tab="PRICES" />} />
+                <Route path="admin/discount-rules" element={<AdminConfig tab="DISCOUNTS" />} />
+                <Route path="admin/warehouses" element={<AdminConfig tab="WAREHOUSES" />} />
+                <Route path="admin/subscription-plans" element={<AdminConfig tab="PLANS" />} />
+                <Route path="backend" element={<Navigate to="/internal/admin/products" replace />} />
               </Route>
             </Route>
           </Route>

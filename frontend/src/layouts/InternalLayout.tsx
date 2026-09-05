@@ -30,7 +30,7 @@ export default function InternalLayout() {
         }
 
         if (role === 'ADMIN') {
-            items.push({ label: 'Backend Config', path: '/internal/backend' });
+            items.push({ label: 'Master Data (Admin)', path: '/internal/admin' });
         }
 
         return items;
