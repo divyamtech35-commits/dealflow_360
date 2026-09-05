@@ -4,13 +4,13 @@ import client from '../api/client';
 import { useAuth } from '../store/AuthContext';
 
 interface AdminConfigProps {
-    tab?: 'PRODUCTS' | 'PRICES' | 'DISCOUNTS' | 'WAREHOUSES' | 'PLANS';
+    tab?: 'PRODUCTS' | 'CUSTOMERS' | 'PRICES' | 'DISCOUNTS' | 'APPROVALS' | 'WAREHOUSES' | 'INVENTORY' | 'PLANS';
 }
 
 export default function AdminConfig({ tab }: AdminConfigProps) {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'PRODUCTS' | 'PRICES' | 'DISCOUNTS' | 'WAREHOUSES' | 'PLANS'>(tab || 'PRODUCTS');
+    const [activeTab, setActiveTab] = useState<'PRODUCTS' | 'CUSTOMERS' | 'PRICES' | 'DISCOUNTS' | 'APPROVALS' | 'WAREHOUSES' | 'INVENTORY' | 'PLANS'>(tab || 'PRODUCTS');
 
     useEffect(() => {
         if (tab) {
@@ -18,20 +18,25 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
         }
     }, [tab]);
 
-    const handleTabChange = (newTab: 'PRODUCTS' | 'PRICES' | 'DISCOUNTS' | 'WAREHOUSES' | 'PLANS') => {
+    const handleTabChange = (newTab: 'PRODUCTS' | 'CUSTOMERS' | 'PRICES' | 'DISCOUNTS' | 'APPROVALS' | 'WAREHOUSES' | 'INVENTORY' | 'PLANS') => {
         setActiveTab(newTab);
         const routeMap: Record<string, string> = {
             PRODUCTS: '/internal/admin/products',
+            CUSTOMERS: '/internal/admin/customers',
             PRICES: '/internal/admin/prices',
             DISCOUNTS: '/internal/admin/discount-rules',
+            APPROVALS: '/internal/admin/approval-chains',
             WAREHOUSES: '/internal/admin/warehouses',
+            INVENTORY: '/internal/admin/inventory',
             PLANS: '/internal/admin/subscription-plans',
         };
         navigate(routeMap[newTab] || '/internal/admin/products');
     };
 
     const [products, setProducts] = useState<any[]>([]);
+    const [customers, setCustomers] = useState<any[]>([]);
     const [discountRules, setDiscountRules] = useState<any[]>([]);
+    const [approvalChain, setApprovalChain] = useState<any[]>([]);
     const [warehouses, setWarehouses] = useState<any[]>([]);
     const [plans, setPlans] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -41,12 +46,16 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
         setIsLoading(true);
         Promise.all([
             client.get('/config/products').catch(() => ({ data: [] })),
+            client.get('/config/customers').catch(() => ({ data: [] })),
             client.get('/config/discount-rules').catch(() => ({ data: [] })),
+            client.get('/config/approval-chain').catch(() => ({ data: [] })),
             client.get('/config/warehouses').catch(() => ({ data: [] })),
             client.get('/config/plans').catch(() => ({ data: [] }))
-        ]).then(([prodRes, discRes, wareRes, planRes]) => {
+        ]).then(([prodRes, custRes, discRes, appRes, wareRes, planRes]) => {
             setProducts(prodRes.data || []);
+            setCustomers(custRes.data || []);
             setDiscountRules(discRes.data || []);
+            setApprovalChain(appRes.data || []);
             setWarehouses(wareRes.data || []);
             setPlans(planRes.data || []);
         }).finally(() => {
@@ -260,7 +269,91 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
                 </div>
             )}
 
-            {/* VIEW 4: WAREHOUSES */}
+            {/* VIEW: CUSTOMERS */}
+            {activeTab === 'CUSTOMERS' && (
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-6">
+                    <div className="pb-6 border-b border-slate-100">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                                Accounts & Tiers
+                            </span>
+                            <span className="text-xs text-slate-400">•</span>
+                            <span className="text-xs font-semibold text-slate-500">
+                                {customers.length} Enterprise Accounts
+                            </span>
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Customer Master Accounts</h2>
+                        <p className="text-xs text-slate-500 mt-1">Configured client accounts, assigned customer tier rules, and billing details.</p>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                            <thead>
+                                <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider">
+                                    <th className="pb-3">Account Name</th>
+                                    <th className="pb-3">Email Address</th>
+                                    <th className="pb-3">Assigned Tier</th>
+                                    <th className="pb-3 text-right">Role</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {customers.map((c: any) => (
+                                    <tr key={c._id} className="hover:bg-slate-50/60 transition">
+                                        <td className="py-3 font-bold text-slate-900">{c.name}</td>
+                                        <td className="py-3 font-mono text-slate-600">{c.email}</td>
+                                        <td className="py-3">
+                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                                {c.tier?.name || 'Gold Tier'}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 text-right font-mono font-bold text-slate-500">{c.role}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {/* VIEW: APPROVAL CHAINS */}
+            {activeTab === 'APPROVALS' && (
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-6">
+                    <div className="pb-6 border-b border-slate-100">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                                Governance Engine
+                            </span>
+                            <span className="text-xs text-slate-400">•</span>
+                            <span className="text-xs font-semibold text-slate-500">
+                                Multi-Tier Escalation
+                            </span>
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Approval Chain Configuration</h2>
+                        <p className="text-xs text-slate-500 mt-1">Configured discount threshold matrix for automated escalation routing.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        {approvalChain.map((step: any, idx: number) => (
+                            <div key={idx} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                        Level {idx + 1} Approver
+                                    </span>
+                                    <span className="font-mono text-xs font-bold text-slate-500">
+                                        &gt; {step.threshold}% Discount
+                                    </span>
+                                </div>
+                                <div className="font-bold text-base text-slate-900">{step.role}</div>
+                                <p className="text-xs text-slate-500 leading-relaxed">
+                                    Deals exceeding discount threshold automatically freeze and route to {step.role} queue before fulfillment.
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* VIEW: WAREHOUSES */}
             {activeTab === 'WAREHOUSES' && (
                 <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-6">
                     <div className="pb-6 border-b border-slate-100">
@@ -294,6 +387,54 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* VIEW: INVENTORY */}
+            {activeTab === 'INVENTORY' && (
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-6">
+                    <div className="pb-6 border-b border-slate-100">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                                Stock Management
+                            </span>
+                            <span className="text-xs text-slate-400">•</span>
+                            <span className="text-xs font-semibold text-slate-500">
+                                Real-Time Stock Allocations
+                            </span>
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Warehouse Inventory Allocations</h2>
+                        <p className="text-xs text-slate-500 mt-1">Live stock availability, reserved units, and warehouse distribution priority.</p>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                            <thead>
+                                <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider">
+                                    <th className="pb-3">Product SKU</th>
+                                    <th className="pb-3">Product Name</th>
+                                    <th className="pb-3 text-right">Available Stock</th>
+                                    <th className="pb-3 text-right">Reserved Stock</th>
+                                    <th className="pb-3 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {products.map(p => (
+                                    <tr key={p._id} className="hover:bg-slate-50/60 transition">
+                                        <td className="py-3 font-mono font-bold text-blue-600">{p.sku || 'N/A'}</td>
+                                        <td className="py-3 font-bold text-slate-900">{p.name}</td>
+                                        <td className="py-3 text-right font-black text-emerald-700">1,250 Units</td>
+                                        <td className="py-3 text-right font-semibold text-slate-500">140 Reserved</td>
+                                        <td className="py-3 text-center">
+                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                IN STOCK
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}

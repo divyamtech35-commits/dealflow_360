@@ -16,9 +16,12 @@ export default function InternalLayout() {
         if (role === 'ADMIN') {
             return [
                 { label: 'Products', path: '/internal/admin/products' },
+                { label: 'Customers', path: '/internal/admin/customers' },
                 { label: 'Price Lists', path: '/internal/admin/prices' },
                 { label: 'Discount Tiers', path: '/internal/admin/discount-rules' },
+                { label: 'Approval Chains', path: '/internal/admin/approval-chains' },
                 { label: 'Warehouses', path: '/internal/admin/warehouses' },
+                { label: 'Inventory', path: '/internal/admin/inventory' },
                 { label: 'Subscription Plans', path: '/internal/admin/subscription-plans' },
             ];
         }
@@ -105,11 +108,16 @@ export default function InternalLayout() {
                     </div>
                 </div>
 
-                {/* Nav items (Clean text navigation matching Mentor-Mentee-Portal) */}
+                {/* Nav items */}
                 <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
                     <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 px-3 mb-3">
-                        Navigation
+                        {user?.role === 'ADMIN' ? 'ADMIN' : 'NAVIGATION'}
                     </div>
+                    {user?.role === 'ADMIN' && (
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-3 my-2">
+                            CONFIGURATION
+                        </div>
+                    )}
                     {navItems.map((item) => {
                         const active = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
                         return (

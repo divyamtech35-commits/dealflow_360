@@ -54,9 +54,12 @@ function App() {
               <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
                 <Route path="admin" element={<Navigate to="/internal/admin/products" replace />} />
                 <Route path="admin/products" element={<AdminConfig tab="PRODUCTS" />} />
+                <Route path="admin/customers" element={<AdminConfig tab="CUSTOMERS" />} />
                 <Route path="admin/prices" element={<AdminConfig tab="PRICES" />} />
                 <Route path="admin/discount-rules" element={<AdminConfig tab="DISCOUNTS" />} />
+                <Route path="admin/approval-chains" element={<AdminConfig tab="APPROVALS" />} />
                 <Route path="admin/warehouses" element={<AdminConfig tab="WAREHOUSES" />} />
+                <Route path="admin/inventory" element={<AdminConfig tab="INVENTORY" />} />
                 <Route path="admin/subscription-plans" element={<AdminConfig tab="PLANS" />} />
                 <Route path="backend" element={<Navigate to="/internal/admin/products" replace />} />
               </Route>
