@@ -6,10 +6,12 @@ import Signup from './pages/auth/Signup';
 import InternalLayout from './layouts/InternalLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// Placeholders for InternalLayout nav
+import QuotationList from './pages/QuotationList';
+import QuotationBuilder from './pages/QuotationBuilder';
+import ApprovalQueue from './pages/ApprovalQueue';
+import ApprovalDetail from './pages/ApprovalDetail';
+
 const DummyDashboard = () => <div className="text-white p-8 font-bold">Dashboard Section (Coming Soon)</div>;
-const DummyPipeline = () => <div className="text-white p-8 font-bold">Pipeline Placeholder</div>;
-const DummyApprovals = () => <div className="text-white p-8 font-bold">Approvals Pipeline (Coming Soon)</div>;
 const DummyBackend = () => <div className="text-white p-8 font-bold">Admin Config Engine (Coming Soon)</div>;
 
 function App() {
@@ -21,15 +23,16 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          {/* Internal Routes fully protected via InternalLayout & AuthProvider */}
           <Route path="/internal" element={<ProtectedRoute />}>
             <Route element={<InternalLayout />}>
               <Route path="dashboard" element={<DummyDashboard />} />
-              <Route path="quotations" element={<DummyPipeline />} />
 
-              {/* Specific Role Auth Guards */}
+              <Route path="quotations" element={<QuotationList />} />
+              <Route path="quotations/:id" element={<QuotationBuilder />} />
+
               <Route element={<ProtectedRoute allowedRoles={['SALES_MANAGER', 'FINANCE', 'ADMIN']} />}>
-                <Route path="approvals" element={<DummyApprovals />} />
+                <Route path="approvals" element={<ApprovalQueue />} />
+                <Route path="approvals/:id" element={<ApprovalDetail />} />
               </Route>
 
               <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>

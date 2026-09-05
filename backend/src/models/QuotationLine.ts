@@ -7,13 +7,17 @@ export interface IQuotationLine extends Document {
     quantity: number;
     discountPercent: number;
 
-    // Snapshots at time of adding
+    // Snapshots
     productName: string;
     sku: string;
     category: string;
-    unitPrice: number; // resolved through customer price list
+    unitPrice: number;
     costPrice: number;
     taxPercent: number;
+
+    // Risk Evaluated Fields
+    overagePercent: number;
+    isViolation: boolean;
 }
 
 const QuotationLineSchema: Schema = new Schema({
@@ -29,7 +33,11 @@ const QuotationLineSchema: Schema = new Schema({
     category: { type: String },
     unitPrice: { type: Number, required: true },
     costPrice: { type: Number, required: true },
-    taxPercent: { type: Number, default: 0 }
+    taxPercent: { type: Number, default: 0 },
+
+    // Risk Evaluated Fields
+    overagePercent: { type: Number, default: 0 },
+    isViolation: { type: Boolean, default: false }
 });
 
 export const QuotationLine = mongoose.model<IQuotationLine>('QuotationLine', QuotationLineSchema);

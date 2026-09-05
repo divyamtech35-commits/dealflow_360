@@ -17,14 +17,17 @@ export const serializeQuotation = (q: any, lines?: any[]) => {
         totalFormatted: formatINR(q.totalAmount),
         marginAmount: q.marginAmount,
         marginFormatted: formatINR(q.marginAmount),
-        marginPct: q.marginPct,
+        marginPct: q.marginPct || 0,
         orderDiscountPercent: q.orderDiscountPercent,
-        riskScore: q.riskScore,
+        riskScore: q.riskScore || 0,
+        requiredApprovalSteps: q.requiredApprovalSteps || [],
         lastActivityAt: q.lastActivityAt
     };
 
     if (lines) {
+        let violationCount = 0;
         (base as any).lines = lines.map((l: any) => {
+            if (l.isViolation) violationCount++;
             const gross = l.unitPrice * l.quantity;
             const discount = Math.round((gross * l.discountPercent) / 100);
             const lineTotal = gross - discount;
@@ -39,9 +42,15 @@ export const serializeQuotation = (q: any, lines?: any[]) => {
                 unitPrice: l.unitPrice,
                 unitPriceFormatted: formatINR(l.unitPrice),
                 lineTotal,
-                lineTotalFormatted: formatINR(lineTotal)
+                lineTotalFormatted: formatINR(lineTotal),
+
+                // Risk
+                overagePercent: l.overagePercent || 0,
+                isViolation: !!l.isViolation,
+                allowedPercent: l.discountPercent - (l.overagePercent || 0) // Derived for UI display (given - overage)
             };
         });
+        (base as any).violationCount = violationCount;
     }
 
     return base;
