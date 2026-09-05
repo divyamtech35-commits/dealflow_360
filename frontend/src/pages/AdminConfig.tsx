@@ -76,6 +76,29 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 pb-20">
+            {/* Top Sub-Navigation Tabs */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200">
+                {[
+                    { id: 'PRODUCTS', label: 'Products' },
+                    { id: 'PRICES', label: 'Price Lists' },
+                    { id: 'DISCOUNTS', label: 'Discount Tiers' },
+                    { id: 'WAREHOUSES', label: 'Warehouses' },
+                    { id: 'PLANS', label: 'Subscription Plans' },
+                ].map((t) => (
+                    <button
+                        key={t.id}
+                        onClick={() => handleTabChange(t.id as any)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                            activeTab === t.id
+                                ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-slate-900'
+                        }`}
+                    >
+                        {t.label}
+                    </button>
+                ))}
+            </div>
+
             {/* VIEW 1: PRODUCTS MASTER CATALOG */}
             {activeTab === 'PRODUCTS' && (
                 <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-6">
