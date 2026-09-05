@@ -42,7 +42,12 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
-    useEffect(() => {
+    // Modal state for CRUD
+    const [modalOpen, setModalOpen] = useState(false);
+    const [editItem, setEditItem] = useState<any>(null);
+    const [formData, setFormData] = useState<any>({});
+
+    const fetchData = () => {
         setIsLoading(true);
         Promise.all([
             client.get('/config/products').catch(() => ({ data: [] })),
@@ -61,7 +66,47 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
         }).finally(() => {
             setIsLoading(false);
         });
+    };
+
+    useEffect(() => {
+        fetchData();
     }, []);
+
+    const openCreateModal = () => {
+        setEditItem(null);
+        setFormData({});
+        setModalOpen(true);
+    };
+
+    const openEditModal = (item: any) => {
+        setEditItem(item);
+        setFormData({ ...item });
+        setModalOpen(true);
+    };
+
+    const handleDelete = async (endpoint: string, id: string) => {
+        if (!window.confirm('Are you sure you want to delete this configuration item?')) return;
+        try {
+            await client.delete(`/config/${endpoint}/${id}`);
+            fetchData();
+        } catch (e: any) {
+            alert(e.response?.data?.error || 'Failed to delete item');
+        }
+    };
+
+    const handleSave = async (endpoint: string) => {
+        try {
+            if (editItem && editItem._id) {
+                await client.put(`/config/${endpoint}/${editItem._id}`, formData);
+            } else {
+                await client.post(`/config/${endpoint}`, formData);
+            }
+            setModalOpen(false);
+            fetchData();
+        } catch (e: any) {
+            alert(e.response?.data?.error || 'Failed to save configuration');
+        }
+    };
 
     // Filtered products for products tab
     const filteredProducts = products.filter(p =>
@@ -104,13 +149,21 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
                             <h2 className="text-2xl font-black text-slate-900 tracking-tight">Product Master Catalog</h2>
                             <p className="text-xs text-slate-500 mt-1">Itemized hardware units, recurring licenses, list prices, and target margins.</p>
                         </div>
-                        <input
-                            type="text"
-                            placeholder="Filter by product name or SKU..."
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:bg-white focus:border-blue-500 w-full sm:w-80 shadow-xs transition"
-                        />
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="text"
+                                placeholder="Filter by product name or SKU..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:bg-white focus:border-blue-500 w-full sm:w-64 shadow-xs transition"
+                            />
+                            <button
+                                onClick={openCreateModal}
+                                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition whitespace-nowrap cursor-pointer"
+                            >
+                                + Add Product
+                            </button>
+                        </div>
                     </div>
 
                     <div className="overflow-x-auto">
@@ -124,6 +177,7 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
                                     <th className="pb-3 text-right">Cost Price</th>
                                     <th className="pb-3 text-right">Target Margin</th>
                                     <th className="pb-3 text-center">Type</th>
+                                    <th className="pb-3 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -147,6 +201,10 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
                                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${p.isSubscription ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
                                                     {p.isSubscription ? 'SaaS' : 'Hardware'}
                                                 </span>
+                                            </td>
+                                            <td className="py-3 text-right space-x-2">
+                                                <button onClick={() => openEditModal(p)} className="text-blue-600 font-bold hover:underline">Edit</button>
+                                                <button onClick={() => handleDelete('products', p._id)} className="text-red-600 font-bold hover:underline">Delete</button>
                                             </td>
                                         </tr>
                                     );
@@ -474,6 +532,225 @@ export default function AdminConfig({ tab }: AdminConfigProps) {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* UNIVERSAL CONFIGURATION EDIT/CREATE MODAL */}
+            {modalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-6 shadow-2xl border border-slate-100">
+                        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                            <h3 className="text-xl font-black text-slate-900">
+                                {editItem ? 'Edit Configuration' : 'Add New Configuration'}
+                            </h3>
+                            <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
+                        </div>
+
+                        {activeTab === 'PRODUCTS' && (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Product Name</label>
+                                    <input
+                                        type="text"
+                                        value={formData.name || ''}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500"
+                                        placeholder="e.g. Enterprise Router X-1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">SKU</label>
+                                    <input
+                                        type="text"
+                                        value={formData.sku || ''}
+                                        onChange={e => setFormData({ ...formData, sku: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500 font-mono"
+                                        placeholder="e.g. HW-ROUTER-01"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 mb-1">Base Price ($)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.basePrice || ''}
+                                            onChange={e => setFormData({ ...formData, basePrice: Number(e.target.value) })}
+                                            className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 mb-1">Cost Price ($)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.costPrice || ''}
+                                            onChange={e => setFormData({ ...formData, costPrice: Number(e.target.value) })}
+                                            className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500"
+                                        />
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handleSave('products')}
+                                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer"
+                                >
+                                    Save Product Config
+                                </button>
+                            </div>
+                        )}
+
+                        {activeTab === 'CUSTOMERS' && (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Customer Account Name</label>
+                                    <input
+                                        type="text"
+                                        value={formData.name || ''}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500"
+                                        placeholder="e.g. Acme Corp"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Email</label>
+                                    <input
+                                        type="email"
+                                        value={formData.email || ''}
+                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500 font-mono"
+                                        placeholder="client@company.com"
+                                    />
+                                </div>
+                                <button
+                                    onClick={() => handleSave('customers')}
+                                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer"
+                                >
+                                    Save Customer Account
+                                </button>
+                            </div>
+                        )}
+
+                        {(activeTab === 'DISCOUNTS' || activeTab === 'PRICES') && (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Max Allowed Discount (%)</label>
+                                    <input
+                                        type="number"
+                                        value={formData.maxDiscountPercent || ''}
+                                        onChange={e => setFormData({ ...formData, maxDiscountPercent: Number(e.target.value) })}
+                                        className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Manager Approval Above (%)</label>
+                                    <input
+                                        type="number"
+                                        value={formData.approvalRequiredAbove || ''}
+                                        onChange={e => setFormData({ ...formData, approvalRequiredAbove: Number(e.target.value) })}
+                                        className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Finance Approval Above (%)</label>
+                                    <input
+                                        type="number"
+                                        value={formData.financeApprovalRequiredAbove || ''}
+                                        onChange={e => setFormData({ ...formData, financeApprovalRequiredAbove: Number(e.target.value) })}
+                                        className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500"
+                                    />
+                                </div>
+                                <button
+                                    onClick={() => handleSave('discount-rules')}
+                                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer"
+                                >
+                                    Save Discount Tier Rule
+                                </button>
+                            </div>
+                        )}
+
+                        {activeTab === 'WAREHOUSES' && (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Warehouse Code</label>
+                                    <input
+                                        type="text"
+                                        value={formData.code || ''}
+                                        onChange={e => setFormData({ ...formData, code: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500 font-mono"
+                                        placeholder="WH-TEXAS"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Facility Name</label>
+                                    <input
+                                        type="text"
+                                        value={formData.name || ''}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500"
+                                        placeholder="Central Fulfillment Hub"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Location Address</label>
+                                    <input
+                                        type="text"
+                                        value={formData.address || ''}
+                                        onChange={e => setFormData({ ...formData, address: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500"
+                                        placeholder="Austin, TX"
+                                    />
+                                </div>
+                                <button
+                                    onClick={() => handleSave('warehouses')}
+                                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer"
+                                >
+                                    Save Warehouse Depot
+                                </button>
+                            </div>
+                        )}
+
+                        {activeTab === 'PLANS' && (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-1">Subscription Plan Name</label>
+                                    <input
+                                        type="text"
+                                        value={formData.name || ''}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500"
+                                        placeholder="Pro SLA Plan"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 mb-1">Price ($)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.price || ''}
+                                            onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
+                                            className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 mb-1">Billing Cycle</label>
+                                        <select
+                                            value={formData.billingCycle || 'MONTHLY'}
+                                            onChange={e => setFormData({ ...formData, billingCycle: e.target.value })}
+                                            className="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:border-blue-500"
+                                        >
+                                            <option value="MONTHLY">MONTHLY</option>
+                                            <option value="QUARTERLY">QUARTERLY</option>
+                                            <option value="YEARLY">YEARLY</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handleSave('plans')}
+                                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer"
+                                >
+                                    Save Subscription Plan
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
