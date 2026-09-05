@@ -7,10 +7,10 @@ import InternalLayout from './layouts/InternalLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Placeholders for InternalLayout nav
-const DummyDashboard = () => <div className="text-white">Dashboard Placeholder</div>;
-const DummyPipeline = () => <div className="text-white">Pipeline Placeholder</div>;
-const DummyApprovals = () => <div className="text-white">Approvals Placeholder</div>;
-const DummyBackend = () => <div className="text-white">Backend Config Placeholder</div>;
+const DummyDashboard = () => <div className="text-white p-8 font-bold">Dashboard Section (Coming Soon)</div>;
+const DummyPipeline = () => <div className="text-white p-8 font-bold">Pipeline Placeholder</div>;
+const DummyApprovals = () => <div className="text-white p-8 font-bold">Approvals Pipeline (Coming Soon)</div>;
+const DummyBackend = () => <div className="text-white p-8 font-bold">Admin Config Engine (Coming Soon)</div>;
 
 function App() {
   return (
