@@ -23,7 +23,6 @@ export default function InternalLayout() {
                 { label: 'Approval Chains', path: '/internal/admin/approval-chains' },
                 { label: 'Warehouses', path: '/internal/admin/warehouses' },
                 { label: 'Inventory', path: '/internal/admin/inventory' },
-                { label: 'Subscription Plans', path: '/internal/admin/subscription-plans' },
             ];
         }
 
@@ -93,7 +92,6 @@ export default function InternalLayout() {
         if (pathname.includes('/internal/admin/approval-chains')) return 'Master Data - Approval Chains';
         if (pathname.includes('/internal/admin/warehouses')) return 'Master Data - Warehouses';
         if (pathname.includes('/internal/admin/inventory')) return 'Master Data - Inventory Allocations';
-        if (pathname.includes('/internal/admin/subscription-plans')) return 'Master Data - Subscription Plans';
         if (pathname.includes('/internal/admin')) return 'Master Data Configuration';
         if (pathname.includes('/internal/backend')) return 'System Configuration';
         return user?.role === 'ADMIN' ? 'Admin Master Data' : 'Sales Operations';

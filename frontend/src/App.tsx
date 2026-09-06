@@ -60,7 +60,7 @@ function App() {
                 <Route path="admin/approval-chains" element={<AdminConfig tab="APPROVALS" />} />
                 <Route path="admin/warehouses" element={<AdminConfig tab="WAREHOUSES" />} />
                 <Route path="admin/inventory" element={<AdminConfig tab="INVENTORY" />} />
-                <Route path="admin/subscription-plans" element={<AdminConfig tab="PLANS" />} />
+                <Route path="admin/subscription-plans" element={<Navigate to="/internal/admin/products" replace />} />
                 <Route path="backend" element={<Navigate to="/internal/admin/products" replace />} />
               </Route>
             </Route>
