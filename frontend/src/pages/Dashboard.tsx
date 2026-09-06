@@ -268,15 +268,6 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Wireframe Guidance Callout Banner */}
-            <div className="p-5 rounded-3xl bg-amber-50/90 border border-amber-200 text-amber-900 text-xs sm:text-sm shadow-xs leading-relaxed">
-                <div className="font-bold text-amber-950 mb-1">
-                    DealFlow360 Automated Approval Engine:
-                </div>
-                <div>
-                    After login, internal users land on the Sales Dashboard. Quotes with requested discounts exceeding tier thresholds (Bronze &gt;8%, Silver &gt;15%, Gold &gt;25%) automatically route to Sales Manager or Finance approval queues before warehouse allocation.
-                </div>
-            </div>
 
             {/* Main Content Split: Quotations Pipeline Table & Activity Feed */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
