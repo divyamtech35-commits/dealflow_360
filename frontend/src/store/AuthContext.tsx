@@ -6,6 +6,12 @@ export interface User {
     name: string;
     email: string;
     role: string;
+    tier?: {
+        _id?: string;
+        name: string;
+        maxDiscountPercent?: number;
+        description?: string;
+    };
 }
 
 interface AuthContextType {

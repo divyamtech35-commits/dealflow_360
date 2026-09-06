@@ -129,35 +129,70 @@ export default function Login() {
                 )}
 
                 {/* 1-Click Demo Persona Selector */}
-                <div className="flex flex-col gap-1.5">
+                {/* 1-Click Demo Persona Selector */}
+                <div className="flex flex-col gap-2 p-2.5 bg-slate-50/90 rounded-xl border border-slate-200/80">
                     <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                            Demo Personas
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                            Demo Quick Sign-In
                         </span>
                         <span className="text-[10px] text-slate-400 font-medium">1-click autofill</span>
                     </div>
-                    <div className="grid grid-cols-5 gap-1.5">
-                        {[
-                            { label: 'Sales Rep', email: 'rep@dealflow360.com', activeStyle: 'hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/40' },
-                            { label: 'Manager', email: 'manager@dealflow360.com', activeStyle: 'hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50/40' },
-                            { label: 'Finance', email: 'finance@dealflow360.com', activeStyle: 'hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50/40' },
-                            { label: 'Admin', email: 'admin@dealflow360.com', activeStyle: 'hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50/40' },
-                            { label: 'Customer', email: 'customer1@dealflow360.com', activeStyle: 'hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50/40' },
-                        ].map((p) => (
-                            <button
-                                key={p.label}
-                                type="button"
-                                onClick={() => {
-                                    setEmail(p.email);
-                                    setPassword('password123');
-                                    setErrorMsg('');
-                                    setInfoMsg(`Autofilled ${p.label} account (${p.email})`);
-                                }}
-                                className={`px-1.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-slate-50/80 text-slate-600 transition-all text-center truncate cursor-pointer ${p.activeStyle} ${email === p.email ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-xs' : ''}`}
-                            >
-                                {p.label}
-                            </button>
-                        ))}
+
+                    {/* Internal Staff */}
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Internal Team</span>
+                        <div className="grid grid-cols-4 gap-1.5">
+                            {[
+                                { label: 'Sales Rep', email: 'rep@dealflow360.com', activeStyle: 'hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50' },
+                                { label: 'Manager', email: 'manager@dealflow360.com', activeStyle: 'hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50/50' },
+                                { label: 'Finance', email: 'finance@dealflow360.com', activeStyle: 'hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50/50' },
+                                { label: 'Admin', email: 'admin@dealflow360.com', activeStyle: 'hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50/50' },
+                            ].map((p) => (
+                                <button
+                                    key={p.label}
+                                    type="button"
+                                    onClick={() => {
+                                        setEmail(p.email);
+                                        setPassword('password123');
+                                        setErrorMsg('');
+                                        setInfoMsg(`Autofilled ${p.label} account (${p.email})`);
+                                    }}
+                                    className={`px-1 py-1.5 text-[11px] font-semibold rounded-lg border border-slate-200 bg-white text-slate-600 transition-all text-center truncate cursor-pointer ${p.activeStyle} ${email === p.email ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-xs' : ''}`}
+                                >
+                                    {p.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Customer Personas with Tiers */}
+                    <div className="flex flex-col gap-1 pt-1.5 border-t border-slate-200/60">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Customer Portal</span>
+                            <span className="text-[9px] text-indigo-500 font-semibold">Tier-Aware</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5">
+                            {[
+                                { label: 'Acme Corp', tier: 'Gold (18%)', email: 'customer1@dealflow360.com' },
+                                { label: 'Stark Ind', tier: 'Platinum (25%)', email: 'customer2@dealflow360.com' },
+                                { label: 'Wayne Ent', tier: 'Platinum (25%)', email: 'customer3@dealflow360.com' },
+                            ].map((c) => (
+                                <button
+                                    key={c.label}
+                                    type="button"
+                                    onClick={() => {
+                                        setEmail(c.email);
+                                        setPassword('password123');
+                                        setErrorMsg('');
+                                        setInfoMsg(`Autofilled ${c.label} [${c.tier}] (${c.email})`);
+                                    }}
+                                    className={`p-1.5 text-left rounded-lg border border-slate-200 bg-white hover:border-indigo-500 hover:bg-indigo-50/50 transition-all cursor-pointer flex flex-col ${email === c.email ? 'border-indigo-500 bg-indigo-50/70 text-indigo-800 font-bold shadow-xs' : 'text-slate-700'}`}
+                                >
+                                    <span className="text-[11px] font-semibold truncate leading-tight">{c.label}</span>
+                                    <span className="text-[9px] text-indigo-600 font-medium truncate mt-0.5">{c.tier}</span>
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 

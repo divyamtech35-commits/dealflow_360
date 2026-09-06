@@ -18,21 +18,38 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email, password } = req.body;
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).populate('tier');
         if (!user) throw new ApiError(401, 'Invalid credentials');
 
         const isMatch = await comparePassword(password, user.passwordHash);
         if (!isMatch) throw new ApiError(401, 'Invalid credentials');
 
         const token = issueToken({ userId: user._id, role: user.role });
-        res.json({ token, user: { id: user._id, name: user.name, role: user.role, email: user.email } });
+        res.json({
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                role: user.role,
+                email: user.email,
+                tier: user.tier
+            }
+        });
     } catch (error) { next(error); }
 };
 
 export const me = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = req.user;
+        const user = await User.findById(req.user._id).populate('tier');
         if (!user) throw new ApiError(404, 'User not found');
-        res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+        res.json({
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                tier: user.tier
+            }
+        });
     } catch (error) { next(error); }
 };

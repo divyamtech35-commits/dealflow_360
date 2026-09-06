@@ -11,6 +11,8 @@ import { Quotation } from '../models/Quotation';
 import { User } from '../models/User';
 import { CustomerTier } from '../models/CustomerTier';
 import { DiscountRule } from '../models/DiscountRule';
+import { Invoice } from '../models/Invoice';
+import { Subscription } from '../models/Subscription';
 import { ApiError } from '../utils/ApiError';
 
 const getCustomerQuote = async (req: Request) => {
@@ -70,22 +72,29 @@ export const getCustomerMaxDiscount = async (quote: any): Promise<number> => {
 export const getPortalDashboard = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const customerId = (req as any).user._id;
-        console.log('Customer Portal Dashboard requested for:', customerId);
-        
+
+        const customer = await User.findById(customerId).populate('tier');
+
         const quotations = await Quotation.find({
             customerId,
-            status: { $in: ['APPROVED', 'UNDER_NEGOTIATION', 'CONFIRMED', 'PENDING_APPROVAL'] }
+            status: { $in: ['SENT', 'APPROVED', 'UNDER_NEGOTIATION', 'CONFIRMED', 'PENDING_APPROVAL'] }
         }).sort({ createdAt: -1 });
-        console.log('Found quotations:', quotations.length);
-
-        const allUserQuotations = await Quotation.find({ customerId });
-        console.log('Total quotes for this customer (ignoring status):', allUserQuotations.length);
 
         const orders = await Order.find({ customerId }).sort({ createdAt: -1 });
+        const invoices = await Invoice.find({ customerId }).sort({ createdAt: -1 });
+        const subscriptions = await Subscription.find({ customerId }).sort({ createdAt: -1 });
 
         res.json({
+            customer: {
+                id: customer?._id,
+                name: customer?.name,
+                email: customer?.email,
+                tier: customer?.tier
+            },
             quotations: quotations.map(q => serializePortalQuotation(q.toObject())),
-            orders
+            orders,
+            invoices,
+            subscriptions
         });
     } catch (e) {
         next(e);
