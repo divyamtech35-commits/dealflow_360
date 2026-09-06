@@ -125,7 +125,12 @@ export default function Dashboard() {
 
     const pendingCount = quotes.filter(q => q.status === 'SUBMITTED' || q.status === 'PENDING_APPROVAL').length || 4;
     const openCount = quotes.length || 17;
+    const draftCount = quotes.filter(q => q.status === 'DRAFT').length;
     const atRiskCount = 2;
+    const totalPipelineValue = quotes.reduce((acc: number, q: any) => {
+        const num = q.totalAmount || (typeof q.totalFormatted === 'string' ? parseFloat(q.totalFormatted.replace(/[^0-9.-]+/g, '')) : 0) || 0;
+        return acc + num;
+    }, 0);
 
     return (
         <div className="max-w-7xl mx-auto space-y-8 pb-16">
@@ -215,13 +220,16 @@ export default function Dashboard() {
                     <div>
                         <div className="text-4xl font-black text-slate-900 tracking-tight">{openCount}</div>
                         <div className="text-xs font-medium text-slate-500 mt-2">
-                            12 active drafts • $84,250 pipeline
+                            {draftCount > 0 ? `${draftCount} active drafts` : 'Active pipeline'} • ${totalPipelineValue > 0 ? totalPipelineValue.toLocaleString(undefined, { maximumFractionDigits: 0 }) : '84,250'} pipeline
                         </div>
                     </div>
                 </div>
 
                 {/* Card 3: At Risk Deals */}
-                <div className="p-6 rounded-3xl bg-white border-t-4 border-t-red-500 border-x border-b border-slate-200/90 shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer flex flex-col justify-between">
+                <div
+                    onClick={() => navigate('/internal/quotations')}
+                    className="p-6 rounded-3xl bg-white border-t-4 border-t-red-500 border-x border-b border-slate-200/90 shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer flex flex-col justify-between"
+                >
                     <div className="flex items-center justify-between mb-4">
                         <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                             At Risk Deals
@@ -239,7 +247,10 @@ export default function Dashboard() {
                 </div>
 
                 {/* Card 4: Average Margin Health */}
-                <div className="p-6 rounded-3xl bg-white border-t-4 border-t-emerald-500 border-x border-b border-slate-200/90 shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer flex flex-col justify-between">
+                <div
+                    onClick={() => navigate('/internal/quotations')}
+                    className="p-6 rounded-3xl bg-white border-t-4 border-t-emerald-500 border-x border-b border-slate-200/90 shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer flex flex-col justify-between"
+                >
                     <div className="flex items-center justify-between mb-4">
                         <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                             Margin Health

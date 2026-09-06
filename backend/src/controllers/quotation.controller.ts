@@ -16,8 +16,15 @@ export const listQuotations = async (req: Request, res: Response, next: NextFunc
         const { status, ownerId } = req.query;
         let filter: any = {};
         if (status) filter.status = status;
-        if (ownerId) filter.salesRepId = ownerId;
-        else filter.salesRepId = req.user._id;
+
+        if (ownerId) {
+            filter.salesRepId = ownerId;
+        } else if (req.user?.role === 'SALES_REP') {
+            const hasOwn = await Quotation.exists({ salesRepId: req.user._id });
+            if (hasOwn) {
+                filter.salesRepId = req.user._id;
+            }
+        }
 
         const quotes = await Quotation.find(filter)
             .populate({ path: 'customerId', populate: { path: 'tier' } })
