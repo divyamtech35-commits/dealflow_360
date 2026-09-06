@@ -136,10 +136,11 @@ export default function Login() {
                         </span>
                         <span className="text-[10px] text-slate-400 font-medium">1-click autofill</span>
                     </div>
-                    <div className="grid grid-cols-4 gap-1.5">
+                    <div className="grid grid-cols-5 gap-1.5">
                         {[
                             { label: 'Sales Rep', email: 'rep@dealflow360.com', activeStyle: 'hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/40' },
                             { label: 'Manager', email: 'manager@dealflow360.com', activeStyle: 'hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50/40' },
+                            { label: 'Finance', email: 'finance@dealflow360.com', activeStyle: 'hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50/40' },
                             { label: 'Admin', email: 'admin@dealflow360.com', activeStyle: 'hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50/40' },
                             { label: 'Customer', email: 'customer1@dealflow360.com', activeStyle: 'hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50/40' },
                         ].map((p) => (
