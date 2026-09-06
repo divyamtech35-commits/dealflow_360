@@ -24,6 +24,8 @@ export const listQuotations = async (req: Request, res: Response, next: NextFunc
             if (hasOwn) {
                 filter.salesRepId = req.user._id;
             }
+        } else if (req.user?.role === 'CUSTOMER') {
+            filter.customerId = req.user._id;
         }
 
         const quotes = await Quotation.find(filter)
