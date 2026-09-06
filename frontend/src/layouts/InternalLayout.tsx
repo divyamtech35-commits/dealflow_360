@@ -79,10 +79,13 @@ export default function InternalLayout() {
         : (user?.role === 'ADMIN' ? 'AD' : 'DF');
 
     const getPageTitle = (pathname: string) => {
-        if (pathname.includes('/internal/dashboard')) return 'Sales Dashboard';
+        if (pathname.includes('/internal/dashboard')) return user?.role === 'FINANCE' ? 'Finance Dashboard' : 'Sales Dashboard';
         if (pathname.match(/\/internal\/approvals\/[^/]+/)) return 'Deal Approval Review';
         if (pathname.includes('/internal/approvals')) return 'Approval Queue';
-        if (pathname.includes('/internal/fulfillment')) return 'Fulfillment & Stock Allocation';
+        if (pathname.includes('/internal/billing/order/')) return 'Order Billing & Invoicing';
+        if (pathname.includes('/internal/billing/subscription/')) return 'Subscription Contract Detail';
+        if (pathname.includes('/internal/billing')) return 'Subscription & Billing Management';
+        if (pathname.includes('/internal/fulfillment')) return 'Fulfillment & Order Logistics';
         if (pathname.match(/\/internal\/quotations\/[^/]+/)) return 'Quotation Builder';
         if (pathname.includes('/internal/quotations')) return 'Quotations Pipeline';
         if (pathname.includes('/internal/admin/products')) return 'Master Data - Products';
@@ -94,7 +97,7 @@ export default function InternalLayout() {
         if (pathname.includes('/internal/admin/inventory')) return 'Master Data - Inventory Allocations';
         if (pathname.includes('/internal/admin')) return 'Master Data Configuration';
         if (pathname.includes('/internal/backend')) return 'System Configuration';
-        return user?.role === 'ADMIN' ? 'Admin Master Data' : 'Sales Operations';
+        return user?.role === 'ADMIN' ? 'Admin Master Data' : user?.role === 'FINANCE' ? 'Finance Operations' : 'Sales Operations';
     };
 
     return (
@@ -111,7 +114,7 @@ export default function InternalLayout() {
                             DealFlow<span className="text-blue-400">360</span>
                         </div>
                         <div className="text-[10px] text-slate-400 font-medium tracking-wider uppercase mt-1">
-                            {user?.role === 'ADMIN' ? 'Admin Portal' : 'Sales Operations'}
+                            {user?.role === 'ADMIN' ? 'Admin Portal' : user?.role === 'FINANCE' ? 'Finance & Revenue' : user?.role === 'SALES_MANAGER' ? 'Sales Management' : 'Sales Operations'}
                         </div>
                     </div>
                 </div>

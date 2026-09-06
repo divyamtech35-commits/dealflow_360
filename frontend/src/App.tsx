@@ -44,8 +44,11 @@ function App() {
                 <Route path="approvals/:id" element={<ApprovalDetail />} />
               </Route>
 
-              <Route element={<ProtectedRoute allowedRoles={['FINANCE', 'ADMIN']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['SALES_MANAGER', 'FINANCE', 'ADMIN']} />}>
                 <Route path="fulfillment" element={<FulfillmentScreen />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={['FINANCE', 'ADMIN']} />}>
                 <Route path="billing" element={<BillingDashboard />} />
                 <Route path="billing/subscription/:id" element={<SubscriptionDetail />} />
                 <Route path="billing/order/:orderId" element={<OrderBillingView />} />
