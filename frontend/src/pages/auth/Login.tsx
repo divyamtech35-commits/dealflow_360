@@ -128,6 +128,38 @@ export default function Login() {
                     </div>
                 )}
 
+                {/* 1-Click Demo Persona Selector */}
+                <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                            Demo Personas
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">1-click autofill</span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5">
+                        {[
+                            { label: 'Sales Rep', email: 'rep@dealflow360.com', activeStyle: 'hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/40' },
+                            { label: 'Manager', email: 'manager@dealflow360.com', activeStyle: 'hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50/40' },
+                            { label: 'Admin', email: 'admin@dealflow360.com', activeStyle: 'hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50/40' },
+                            { label: 'Customer', email: 'customer1@dealflow360.com', activeStyle: 'hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50/40' },
+                        ].map((p) => (
+                            <button
+                                key={p.label}
+                                type="button"
+                                onClick={() => {
+                                    setEmail(p.email);
+                                    setPassword('password123');
+                                    setErrorMsg('');
+                                    setInfoMsg(`Autofilled ${p.label} account (${p.email})`);
+                                }}
+                                className={`px-1.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-slate-50/80 text-slate-600 transition-all text-center truncate cursor-pointer ${p.activeStyle} ${email === p.email ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-xs' : ''}`}
+                            >
+                                {p.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 {/* Login Form */}
                 <form onSubmit={handleLogin} className="flex flex-col gap-4">
                     {/* Email Input */}

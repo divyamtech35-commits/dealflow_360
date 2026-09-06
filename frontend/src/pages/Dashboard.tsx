@@ -174,7 +174,13 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {/* Card 1: Pending Approvals */}
                 <div
-                    onClick={() => navigate('/internal/approvals')}
+                    onClick={() => {
+                        if (user?.role === 'SALES_REP') {
+                            navigate('/internal/quotations');
+                        } else {
+                            navigate('/internal/approvals');
+                        }
+                    }}
                     className="p-6 rounded-3xl bg-white border-t-4 border-t-amber-500 border-x border-b border-slate-200/90 shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer flex flex-col justify-between"
                 >
                     <div className="flex items-center justify-between mb-4">
@@ -182,13 +188,13 @@ export default function Dashboard() {
                             Pending Approvals
                         </span>
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                            Action Req.
+                            {user?.role === 'SALES_REP' ? 'Under Review' : 'Action Req.'}
                         </span>
                     </div>
                     <div>
                         <div className="text-4xl font-black text-slate-900 tracking-tight">{pendingCount}</div>
                         <div className="text-xs font-semibold text-amber-700 mt-2">
-                            ⚠ 2 approvals waiting manager
+                            {user?.role === 'SALES_REP' ? '⏳ Your quotes awaiting review' : '⚠ Approvals waiting manager'}
                         </div>
                     </div>
                 </div>
