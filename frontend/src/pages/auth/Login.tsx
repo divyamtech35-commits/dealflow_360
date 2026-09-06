@@ -5,12 +5,13 @@ import { useAuth } from '../../store/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
-    const [email, setEmail] = useState('');
+    const [email, setEmail] = useState(() => localStorage.getItem('dealflow_remembered_email') || '');
     const [password, setPassword] = useState('password123');
     const [showPassword, setShowPassword] = useState(false);
-    const [rememberMe, setRememberMe] = useState(true);
+    const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem('dealflow_remembered_email'));
     const [isLoading, setIsLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
+    const [infoMsg, setInfoMsg] = useState('');
 
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [isHovering, setIsHovering] = useState(false);
@@ -30,14 +31,24 @@ export default function Login() {
         e.preventDefault();
         setIsLoading(true);
         setErrorMsg('');
+        setInfoMsg('');
 
         try {
             const res = await client.post('/auth/login', { email, password });
             login(res.data.token, res.data.user);
 
+            // Persist or clear remembered email
+            if (rememberMe) {
+                localStorage.setItem('dealflow_remembered_email', email);
+            } else {
+                localStorage.removeItem('dealflow_remembered_email');
+            }
+
             // Role-aware landing navigation:
             if (res.data.user.role === 'CUSTOMER') {
                 navigate('/portal/dashboard', { replace: true });
+            } else if (res.data.user.role === 'ADMIN') {
+                navigate('/internal/admin/products', { replace: true });
             } else {
                 navigate('/internal/dashboard', { replace: true });
             }
@@ -110,6 +121,13 @@ export default function Login() {
                     </div>
                 )}
 
+                {/* Info / Hint Banner */}
+                {infoMsg && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl text-xs font-medium">
+                        {infoMsg}
+                    </div>
+                )}
+
                 {/* Login Form */}
                 <form onSubmit={handleLogin} className="flex flex-col gap-4">
                     {/* Email Input */}
@@ -123,7 +141,7 @@ export default function Login() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
-                            placeholder="e.g. rep@dealflow.com"
+                            placeholder="e.g. rep@dealflow360.com or admin@dealflow360.com"
                             className="w-full px-4 py-3 bg-white hover:bg-slate-50/40 focus:bg-white border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none text-slate-800 placeholder:text-slate-400 text-sm transition-all duration-200 shadow-sm disabled:opacity-50"
                         />
                     </div>
@@ -164,12 +182,16 @@ export default function Login() {
                             />
                             <span>Remember me</span>
                         </label>
-                        <span
-                            onClick={() => alert('For testing, default password is: password123')}
-                            className="text-blue-600 hover:text-blue-700 hover:underline cursor-pointer font-semibold"
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setErrorMsg('');
+                                setInfoMsg('Default credentials for demo accounts: password123 (or contact system administrator).');
+                            }}
+                            className="text-blue-600 hover:text-blue-700 hover:underline cursor-pointer font-semibold bg-transparent border-0 p-0"
                         >
                             Forgot password?
-                        </span>
+                        </button>
                     </div>
 
                     {/* Submit Button with High-Tech Shimmer */}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/AuthContext';
 import client from '../api/client';
+import { LogOut } from 'lucide-react';
 
 export default function InternalLayout() {
     const { user, logout } = useAuth();
@@ -76,7 +77,7 @@ export default function InternalLayout() {
 
     const userInitials = user?.name
         ? user.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()
-        : 'DF';
+        : (user?.role === 'ADMIN' ? 'AD' : 'DF');
 
     const getPageTitle = (pathname: string) => {
         if (pathname.includes('/internal/dashboard')) return 'Sales Dashboard';
@@ -85,8 +86,17 @@ export default function InternalLayout() {
         if (pathname.includes('/internal/fulfillment')) return 'Fulfillment & Stock Allocation';
         if (pathname.match(/\/internal\/quotations\/[^/]+/)) return 'Quotation Builder';
         if (pathname.includes('/internal/quotations')) return 'Quotations Pipeline';
+        if (pathname.includes('/internal/admin/products')) return 'Master Data - Products';
+        if (pathname.includes('/internal/admin/customers')) return 'Master Data - Customers & Accounts';
+        if (pathname.includes('/internal/admin/prices')) return 'Master Data - Price Lists';
+        if (pathname.includes('/internal/admin/discount-rules')) return 'Master Data - Discount Tiers';
+        if (pathname.includes('/internal/admin/approval-chains')) return 'Master Data - Approval Chains';
+        if (pathname.includes('/internal/admin/warehouses')) return 'Master Data - Warehouses';
+        if (pathname.includes('/internal/admin/inventory')) return 'Master Data - Inventory Allocations';
+        if (pathname.includes('/internal/admin/subscription-plans')) return 'Master Data - Subscription Plans';
+        if (pathname.includes('/internal/admin')) return 'Master Data Configuration';
         if (pathname.includes('/internal/backend')) return 'System Configuration';
-        return 'Sales Operations';
+        return user?.role === 'ADMIN' ? 'Admin Master Data' : 'Sales Operations';
     };
 
     return (
@@ -103,7 +113,7 @@ export default function InternalLayout() {
                             DealFlow<span className="text-blue-400">360</span>
                         </div>
                         <div className="text-[10px] text-slate-400 font-medium tracking-wider uppercase mt-1">
-                            Sales Operations
+                            {user?.role === 'ADMIN' ? 'Admin Portal' : 'Sales Operations'}
                         </div>
                     </div>
                 </div>
@@ -111,13 +121,8 @@ export default function InternalLayout() {
                 {/* Nav items */}
                 <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
                     <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 px-3 mb-3">
-                        {user?.role === 'ADMIN' ? 'ADMIN' : 'NAVIGATION'}
+                        {user?.role === 'ADMIN' ? 'MASTER DATA' : 'NAVIGATION'}
                     </div>
-                    {user?.role === 'ADMIN' && (
-                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-3 my-2">
-                            CONFIGURATION
-                        </div>
-                    )}
                     {navItems.map((item) => {
                         const active = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
                         return (
@@ -159,18 +164,20 @@ export default function InternalLayout() {
                             </div>
                             <div className="overflow-hidden">
                                 <div className="text-xs font-semibold text-white truncate">
-                                    {user?.name || 'Sales Rep'}
+                                    {user?.name || (user?.role === 'ADMIN' ? 'System Admin' : 'Sales Rep')}
                                 </div>
                                 <div className="text-[10px] text-slate-400 truncate">
-                                    {user?.email || 'bob@dealflow.com'}
+                                    {user?.email || (user?.role === 'ADMIN' ? 'admin@dealflow360.com' : 'rep@dealflow.com')}
                                 </div>
                             </div>
                         </div>
                         <button
                             onClick={logout}
-                            className="text-xs text-slate-400 hover:text-red-400 hover:underline px-2 py-1 transition-colors"
+                            title="Sign out of workspace"
+                            className="text-xs text-slate-400 hover:text-red-400 hover:underline px-2 py-1 transition-colors flex items-center gap-1.5 cursor-pointer"
                         >
-                            Sign out
+                            <LogOut className="w-3.5 h-3.5" />
+                            <span>Sign out</span>
                         </button>
                     </div>
                 </div>
@@ -200,8 +207,9 @@ export default function InternalLayout() {
                         </nav>
                         <button
                             onClick={logout}
-                            className="text-sm text-red-400 pt-4 border-t border-slate-800 text-left"
+                            className="text-sm text-red-400 pt-4 border-t border-slate-800 text-left flex items-center gap-2 cursor-pointer"
                         >
+                            <LogOut className="w-4 h-4" />
                             Sign Out
                         </button>
                     </div>
@@ -229,26 +237,12 @@ export default function InternalLayout() {
                         </div>
                     </div>
 
-                    {/* Right: Search, Role Badge, Logout */}
-                    <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="hidden sm:flex items-center px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 text-slate-400 text-xs w-64 focus-within:border-blue-500 focus-within:bg-white transition">
-                            <input
-                                type="text"
-                                placeholder="Search quotes, customers..."
-                                className="bg-transparent outline-none w-full text-slate-700 placeholder:text-slate-400"
-                            />
+                    {/* Right: Role & Status Badge */}
+                    <div className="flex items-center gap-3">
+                        <div className={`px-3 py-1.5 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${getRoleBadgeStyle(user?.role)}`}>
+                            <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70 animate-pulse" />
+                            {user?.role ? user.role.replace(/_/g, ' ') : 'SALES REP'}
                         </div>
-
-                        <div className={`px-2.5 py-1 rounded-lg border text-xs font-bold uppercase tracking-wider ${getRoleBadgeStyle(user?.role)}`}>
-                            {user?.role || 'SALES_REP'}
-                        </div>
-
-                        <button
-                            onClick={logout}
-                            className="text-xs text-slate-500 hover:text-slate-900 font-medium px-2 py-1 rounded hover:bg-slate-100 transition"
-                        >
-                            Log out
-                        </button>
                     </div>
                 </header>
 

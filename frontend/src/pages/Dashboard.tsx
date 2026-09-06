@@ -138,7 +138,7 @@ export default function Dashboard() {
                         </span>
                         <span className="text-xs text-slate-400">•</span>
                         <span className="text-xs font-semibold text-slate-500">
-                            Welcome back, {user?.name || 'Bob Rep'}
+                            Welcome back, {user?.name || (user?.role === 'ADMIN' ? 'Administrator' : 'Sales Representative')}
                         </span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">

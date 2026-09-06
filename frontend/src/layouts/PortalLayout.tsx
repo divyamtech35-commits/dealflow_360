@@ -1,6 +1,10 @@
 import { Outlet } from 'react-router-dom';
+import { useAuth } from '../store/AuthContext';
+import { LogOut } from 'lucide-react';
 
 const PortalLayout = () => {
+    const { user, logout } = useAuth();
+
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 flex flex-col">
             {/* Distinct Branding / No Internal Nav */}
@@ -11,8 +15,18 @@ const PortalLayout = () => {
                     </div>
                     <span className="font-semibold text-xl tracking-tight text-slate-800">DealFlow Enterprise</span>
                 </div>
-                <div className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                    Secure Customer Portal
+                <div className="flex items-center gap-3">
+                    <div className="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
+                        {user?.name || user?.email || 'Secure Customer Portal'}
+                    </div>
+                    <button
+                        onClick={logout}
+                        title="Sign out of customer portal"
+                        className="text-xs text-slate-500 hover:text-red-600 border border-slate-200 hover:border-red-200 hover:bg-red-50/50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
+                    >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Sign out</span>
+                    </button>
                 </div>
             </header>
 
